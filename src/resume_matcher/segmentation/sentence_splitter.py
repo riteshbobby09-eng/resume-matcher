@@ -133,6 +133,23 @@ class SentenceSplitter:
                         document_id=document_id,
                     )
                 )
+            elif self._is_section_heading(text):
+                # Section headings flush the buffer and become standalone
+                if buffer_text:
+                    new_sents = self._split_text(
+                        buffer_text, buffer_lines, document_id
+                    )
+                    sentences.extend(new_sents)
+                    buffer_text = ""
+                    buffer_lines = []
+
+                sentences.append(
+                    Sentence(
+                        text=text,
+                        source_line_numbers=[line.global_line_number],
+                        document_id=document_id,
+                    )
+                )
             else:
                 # Add to paragraph buffer
                 if buffer_text:
@@ -239,3 +256,38 @@ class SentenceSplitter:
             r"^\s*(?:[•●○◦▪▸►➤➢★✦✧→⮞⬥\-\*]|\d+[.)]\s|[a-zA-Z][.)]\s|[ivxIVX]+[.)]\s)\s*\S",
             text,
         ))
+
+    def _is_section_heading(self, text: str) -> bool:
+        """
+        Check if a line is likely a section heading.
+
+        Headings break the paragraph buffer to ensure proper block formation.
+        Detects:
+        - ALL CAPS short lines (e.g. "WORK EXPERIENCE", "SKILLS")
+        - Colon-terminated short lines (e.g. "Skills:", "Education:")
+        - Known section title patterns
+        """
+        stripped = text.strip()
+        words = stripped.split()
+        word_count = len(words)
+
+        # ALL CAPS with 1-6 words
+        if stripped.isupper() and 1 <= word_count <= 6 and len(stripped) <= 60:
+            return True
+
+        # Colon-terminated with 1-5 words
+        if stripped.endswith(":") and 1 <= word_count <= 5 and len(stripped) <= 50:
+            return True
+
+        # Title-case short lines that look like headings
+        if (
+            word_count <= 4
+            and len(stripped) <= 40
+            and stripped[0].isupper()
+            and not stripped.endswith(".")
+            and not any(c.isdigit() for c in stripped)
+            and stripped.istitle()
+        ):
+            return True
+
+        return False
