@@ -1160,37 +1160,42 @@
 
   <!-- API Settings Modal -->
   <div id="apiSettingsModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-    <div style="background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 24px; max-width: 520px; width: 92%; box-shadow: var(--shadow-card);">
+    <div style="background: var(--bg-secondary); border: 1px solid var(--border-glass); border-radius: var(--radius-lg); padding: 24px; max-width: 520px; width: 90%; box-shadow: var(--shadow-card);">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <h3 style="font-size: 18px; font-weight: 600;">⚙️ Backend API Configuration</h3>
         <button style="background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;" onclick="closeApiSettings()">&times;</button>
       </div>
-      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.5;">
-        Configure the backend server URL used for document parsing and matching. When accessing from HTTPS (Vercel), modern browsers block <code>http://localhost:8000</code> due to Mixed Content security rules. Use an HTTPS tunnel URL or local access.
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.5;">
+        Configure the backend server URL used for document parsing and matching.
       </p>
-      
-      <div style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 14px; font-size: 12px;">
-        <div style="font-weight: 600; color: #00d4ff; margin-bottom: 4px;">⚡ Active HTTPS Tunnel</div>
-        <div style="color: var(--text-primary); font-family: monospace; word-break: break-all; margin-bottom: 6px;">https://swift-ideas-attack.loca.lt</div>
-        <button class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(0, 212, 255, 0.2); color: #00d4ff; border: 1px solid rgba(0, 212, 255, 0.4);" onclick="document.getElementById('apiBaseUrlInput').value='https://swift-ideas-attack.loca.lt'; testConnection();">
-          Use This HTTPS Tunnel
-        </button>
+
+      <div style="background: rgba(0, 212, 255, 0.08); border: 1px solid rgba(0, 212, 255, 0.2); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 16px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+        <strong style="color: var(--accent-cyan);">🔒 Browser HTTPS Requirement:</strong><br/>
+        When visiting Vercel via <code>https://</code>, browsers block insecure <code>http://localhost:8000</code> calls (Mixed Content). Use the active <strong>HTTPS Tunnel</strong> or open <a href="http://localhost:8000" target="_blank" style="color: var(--accent-cyan); text-decoration: underline;">http://localhost:8000</a> directly in your browser.
       </div>
 
-      <div style="margin-bottom: 14px;">
+      <div style="margin-bottom: 12px;">
         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">FastAPI Backend URL</label>
-        <div style="display: flex; gap: 8px;">
-          <input id="apiBaseUrlInput" type="text" placeholder="https://swift-ideas-attack.loca.lt" style="flex: 1; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px;" />
-          <button id="testConnBtn" class="btn" style="padding: 10px 14px; font-size: 12px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass);" onclick="testConnection()">
-            Test
-          </button>
-        </div>
-        <div id="connTestResult" style="font-size: 12px; margin-top: 6px; min-height: 18px;"></div>
+        <input id="apiBaseUrlInput" type="text" placeholder="https://major-llamas-wait.loca.lt" style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px;" />
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 10px;">
-        <button class="btn" style="padding: 8px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); color: var(--text-secondary);" onclick="closeApiSettings()">Cancel</button>
-        <button class="btn btn-primary" style="padding: 8px 18px;" onclick="saveApiSettings()">Save URL</button>
+      <!-- Quick Presets -->
+      <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
+        <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Quick Presets:</span>
+        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3);" onclick="document.getElementById('apiBaseUrlInput').value='https://major-llamas-wait.loca.lt'">⚡ Active Tunnel</button>
+        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: 1px solid var(--border-glass);" onclick="document.getElementById('apiBaseUrlInput').value='http://localhost:8000'">Localhost:8000</button>
+        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: 1px solid var(--border-glass);" onclick="document.getElementById('apiBaseUrlInput').value=''">Relative (/match)</button>
+      </div>
+
+      <!-- Connection Status Test -->
+      <div id="testConnectionResult" style="display: none; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 12px; margin-bottom: 16px;"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" class="btn" style="padding: 8px 14px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); font-size: 13px;" onclick="testApiConnection()">🔍 Test Connection</button>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn" style="padding: 8px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); color: var(--text-secondary);" onclick="closeApiSettings()">Cancel</button>
+          <button class="btn btn-primary" style="padding: 8px 18px;" onclick="saveApiSettings()">Save URL</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1317,19 +1322,48 @@
 
     // ========== API CONFIGURATION ==========
     function getApiBaseUrl() {
-      const stored = localStorage.getItem('rm_api_base_url');
-      if (stored !== null && stored !== '') return stored;
+      try {
+        const stored = localStorage.getItem('rm_api_base_url');
+        if (stored !== null) return stored;
+      } catch (e) {}
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return '';
       }
-      return 'https://swift-ideas-attack.loca.lt';
+      // On Vercel (HTTPS), default to the active secure HTTPS tunnel
+      return 'https://major-llamas-wait.loca.lt';
+    }
+
+    async function checkBackendHealth() {
+      const statusText = document.getElementById('systemStatusText');
+      const statusDot = document.querySelector('.status-dot');
+      const baseUrl = getApiBaseUrl();
+      const healthUrl = baseUrl ? `${baseUrl}/health` : '/health';
+      try {
+        const res = await fetch(healthUrl, {
+          headers: { 'Bypass-Tunnel-Reminder': 'true' }
+        });
+        if (res.ok) {
+          statusText.textContent = 'Backend Online';
+          statusDot.style.background = 'var(--accent-green)';
+          statusDot.style.boxShadow = '0 0 8px var(--accent-green)';
+        } else {
+          statusText.textContent = 'Backend Offline';
+          statusDot.style.background = 'var(--accent-amber)';
+          statusDot.style.boxShadow = '0 0 8px var(--accent-amber)';
+        }
+      } catch (e) {
+        statusText.textContent = 'Backend Offline';
+        statusDot.style.background = 'var(--accent-rose)';
+        statusDot.style.boxShadow = '0 0 8px var(--accent-rose)';
+      }
     }
 
     function openApiSettings() {
       const modal = document.getElementById('apiSettingsModal');
       const input = document.getElementById('apiBaseUrlInput');
+      const resultDiv = document.getElementById('testConnectionResult');
+      resultDiv.style.display = 'none';
       input.value = getApiBaseUrl();
-      document.getElementById('connTestResult').innerHTML = '';
       modal.style.display = 'flex';
     }
 
@@ -1337,67 +1371,43 @@
       document.getElementById('apiSettingsModal').style.display = 'none';
     }
 
-    async function testConnection() {
+    async function testApiConnection() {
       const input = document.getElementById('apiBaseUrlInput');
-      const resultEl = document.getElementById('connTestResult');
-      const testBtn = document.getElementById('testConnBtn');
-      const val = input.value.trim().replace(/\/+$/, '');
-      const healthUrl = val ? `${val}/health` : '/health';
-      
-      testBtn.disabled = true;
-      resultEl.innerHTML = '<span style="color: var(--text-secondary);">Testing connection...</span>';
-      
+      const url = input.value.trim().replace(/\/+$/, '');
+      const healthUrl = url ? `${url}/health` : '/health';
+      const resultDiv = document.getElementById('testConnectionResult');
+      resultDiv.style.display = 'block';
+      resultDiv.style.background = 'rgba(255,255,255,0.05)';
+      resultDiv.style.color = 'var(--text-secondary)';
+      resultDiv.textContent = 'Testing connection...';
+
       try {
         const res = await fetch(healthUrl, {
-          headers: { 'Bypass-Tunnel-Reminder': 'true' },
-          signal: AbortSignal.timeout(5000)
+          headers: { 'Bypass-Tunnel-Reminder': 'true' }
         });
         if (res.ok) {
           const data = await res.json();
-          resultEl.innerHTML = `<span style="color: var(--accent-green); font-weight: 600;">✅ Connected! Backend is online (v${data.version || '0.1.0'}).</span>`;
-          return;
+          resultDiv.style.background = 'rgba(16, 185, 129, 0.15)';
+          resultDiv.style.color = '#34d399';
+          resultDiv.innerHTML = `✅ Successfully connected to FastAPI! Version: ${data.version || '0.1.0'}`;
+        } else {
+          resultDiv.style.background = 'rgba(244, 63, 94, 0.15)';
+          resultDiv.style.color = '#fb7185';
+          resultDiv.innerHTML = `⚠️ Server returned status: ${res.status}`;
         }
-        resultEl.innerHTML = `<span style="color: var(--accent-rose);">❌ Server returned status ${res.status}.</span>`;
       } catch (err) {
-        resultEl.innerHTML = `<span style="color: var(--accent-rose);">❌ Connection failed: ${err.message}. Make sure server is running.</span>`;
-      } finally {
-        testBtn.disabled = false;
+        resultDiv.style.background = 'rgba(244, 63, 94, 0.15)';
+        resultDiv.style.color = '#fb7185';
+        resultDiv.innerHTML = `❌ Connection failed: ${err.message}. If using http:// on an HTTPS site, browser blocks Mixed Content. Use the HTTPS tunnel!`;
       }
-    }
-
-    async function checkBackendHealth() {
-      const statusDot = document.querySelector('.status-dot');
-      const statusText = document.getElementById('systemStatusText');
-      if (!statusDot || !statusText) return;
-
-      const baseUrl = getApiBaseUrl();
-      const healthUrl = baseUrl ? `${baseUrl}/health` : '/health';
-      
-      try {
-        const res = await fetch(healthUrl, {
-          headers: { 'Bypass-Tunnel-Reminder': 'true' },
-          signal: AbortSignal.timeout(4000)
-        });
-        if (res.ok) {
-          const data = await res.json();
-          statusDot.style.background = 'var(--accent-green)';
-          statusDot.style.boxShadow = '0 0 8px var(--accent-green)';
-          statusText.textContent = `Backend Online (v${data.version || '0.1.0'})`;
-          return true;
-        }
-      } catch (e) {
-        // unreachable
-      }
-      statusDot.style.background = 'var(--accent-rose)';
-      statusDot.style.boxShadow = '0 0 8px var(--accent-rose)';
-      statusText.innerHTML = 'Backend Disconnected <a href="javascript:void(0)" onclick="openApiSettings()" style="color:var(--accent-cyan); text-decoration:underline; margin-left:4px;">(Connect)</a>';
-      return false;
     }
 
     function saveApiSettings() {
       const input = document.getElementById('apiBaseUrlInput');
       const val = input.value.trim().replace(/\/+$/, '');
-      localStorage.setItem('rm_api_base_url', val);
+      try {
+        localStorage.setItem('rm_api_base_url', val);
+      } catch (e) {}
       closeApiSettings();
       checkBackendHealth();
       showToast(`API Base URL saved: ${val || 'Default (relative)'}`, 'success');
@@ -1421,8 +1431,8 @@
       try {
         const response = await fetch(matchUrl, {
           method: 'POST',
-          body: formData,
-          headers: { 'Bypass-Tunnel-Reminder': 'true' }
+          headers: { 'Bypass-Tunnel-Reminder': 'true' },
+          body: formData
         });
         if (!response.ok) {
           const err = await response.json();
@@ -1434,7 +1444,7 @@
       } catch (err) {
         let msg = err.message || 'Matching failed';
         if (err.name === 'TypeError' || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-          msg = `Unable to connect to backend at ${baseUrl || 'current origin'}. Check API config or try "⚡ Try Demo Report"!`;
+          msg = `Unable to connect to backend at ${baseUrl || 'current origin'}. Check API Config (⚙️) or click "⚡ Try Demo Report"!`;
         }
         showToast(msg, 'error');
         document.getElementById('emptyState').style.display = 'block';
@@ -2170,9 +2180,9 @@
       setupDropZone('jdDropZone', 'jdFile', 'jdFileInfo', 'jdFileName', 'jdFileSize', 'jdRemove', (f) => { jdFile = f; });
       setupDropZone('resumeDropZone', 'resumeFile', 'resumeFileInfo', 'resumeFileName', 'resumeFileSize', 'resumeRemove', (f) => { resumeFile = f; });
       setupComparisonControls();
+      checkBackendHealth();
       document.getElementById('matchBtn').addEventListener('click', runMatch);
       document.getElementById('downloadBtn').addEventListener('click', downloadReport);
-      checkBackendHealth();
     });
   </script>
 </body>
