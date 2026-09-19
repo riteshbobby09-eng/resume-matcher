@@ -1,0 +1,67 @@
+# ============================================================
+# Resume Matcher — Default Configuration
+# ============================================================
+
+# --- Processing Settings ---
+processing:
+  max_file_size_mb: 25
+  allowed_extensions:
+    - ".pdf"
+    - ".docx"
+  batch_size: 32
+  max_lines_per_document: 10000
+
+# --- Embedding Settings ---
+embedding:
+  model_name: "BAAI/bge-base-en-v1.5"
+  dimension: 768
+  normalize: true
+  batch_size: 32
+  show_progress: false
+
+# --- Retrieval Settings ---
+retrieval:
+  top_k: 20
+  similarity_threshold: 0.45
+  section_match_boost: 0.05
+
+# --- Scoring Weights (must sum to 1.0) ---
+scoring:
+  weights:
+    skill: 0.30
+    work_experience: 0.15
+    education: 0.15
+    semantic_match: 0.40
+  thresholds:
+    strong_match: 0.75
+    moderate_match: 0.55
+    weak_match: 0.35
+
+# --- Block Building ---
+segmentation:
+  max_sentences_per_block: 5
+  min_block_length_chars: 20
+  merge_short_blocks: true
+
+# --- Section Detection ---
+section_detection:
+  min_confidence: 0.5
+  flag_low_confidence: true
+
+# --- Reporting ---
+reporting:
+  schema_version: "1.0.0"
+  top_matches_count: 5
+  bottom_matches_count: 5
+  include_explanations: true
+
+# --- Logging ---
+logging:
+  level: "INFO"
+  format: "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+  sanitize_pii: true
+
+# --- Storage ---
+storage:
+  backend: "memory"  # "memory" or "filesystem"
+  output_dir: "output"

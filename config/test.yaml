@@ -1,0 +1,27 @@
+# ============================================================
+# Resume Matcher — Test Configuration Overrides
+# ============================================================
+# Inherits from default.yaml, only overrides what's needed for tests.
+
+processing:
+  max_file_size_mb: 5
+  batch_size: 4
+
+embedding:
+  batch_size: 4
+  show_progress: false
+
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.30
+
+segmentation:
+  max_sentences_per_block: 3
+
+logging:
+  level: "DEBUG"
+  sanitize_pii: true
+
+storage:
+  backend: "memory"
+  output_dir: "test_output"
