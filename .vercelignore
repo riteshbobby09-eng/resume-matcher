@@ -1,0 +1,9 @@
+venv/
+tests/
+scripts/
+data/
+output/
+config/
+docs/
+pyproject.toml
+src/
