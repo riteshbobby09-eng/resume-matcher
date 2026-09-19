@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Resume Matcher — HR Dashboard</title>
+  <meta name="description" content="AI-powered Resume-JD Matching Dashboard for HR Recruiters">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ========== DESIGN SYSTEM ========== */
+    :root {
+      --bg-primary: #060b18;
+      --bg-secondary: #0d1527;
+      --bg-card: rgba(15, 23, 45, 0.75);
+      --bg-card-hover: rgba(20, 30, 55, 0.85);
+      --bg-glass: rgba(255, 255, 255, 0.03);
+      --border-glass: rgba(255, 255, 255, 0.08);
+      --border-active: rgba(100, 200, 255, 0.3);
+      --text-primary: #e8ecf4;
+      --text-secondary: #8b95a8;
+      --text-muted: #5a6478;
+      --accent-cyan: #00d4ff;
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --accent-teal: #14b8a6;
+      --gradient-score: linear-gradient(135deg, #00d4ff 0%, #3b82f6 50%, #8b5cf6 100%);
+      --gradient-skill: linear-gradient(90deg, #00d4ff, #3b82f6);
+      --gradient-exp: linear-gradient(90deg, #8b5cf6, #a78bfa);
+      --gradient-edu: linear-gradient(90deg, #14b8a6, #10b981);
+      --gradient-semantic: linear-gradient(90deg, #f59e0b, #f97316);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.3);
+      --shadow-glow: 0 0 40px rgba(0, 212, 255, 0.08);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ========== RESET & BASE ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(0, 212, 255, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ========== LAYOUT ========== */
+    .app { position: relative; z-index: 1; }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 32px;
+      border-bottom: 1px solid var(--border-glass);
+      backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6, 11, 24, 0.85);
+    }
+
+    .header-left { display: flex; align-items: center; gap: 16px; }
+
+    .logo {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      background: var(--gradient-score);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 18px; color: white;
+    }
+
+    .header-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-subtitle { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .header-status {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .main { padding: 28px 32px; max-width: 1440px; margin: 0 auto; }
+
+    /* ========== UPLOAD SECTION ========== */
+    .upload-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    .upload-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+      transition: var(--transition);
+    }
+    .upload-card:hover { border-color: var(--border-active); }
+
+    .upload-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .upload-card-title { font-size: 16px; font-weight: 600; }
+    .upload-badge {
+      display: flex; gap: 6px;
+    }
+    .badge {
+      font-size: 10px; font-weight: 600; padding: 3px 8px;
+      border-radius: 4px; text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-pdf { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+    .badge-docx { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+
+    .drop-zone {
+      border: 2px dashed rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius-md);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      position: relative;
+    }
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent-cyan);
+      background: rgba(0, 212, 255, 0.04);
+    }
+    .drop-zone.has-file {
+      border-color: var(--accent-green);
+      border-style: solid;
+      background: rgba(16, 185, 129, 0.04);
+    }
+
+    .drop-zone-icon {
+      width: 48px; height: 48px; margin: 0 auto 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; color: var(--text-secondary);
+      transition: var(--transition);
+    }
+    .drop-zone:hover .drop-zone-icon { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+    .drop-zone.has-file .drop-zone-icon { color: var(--accent-green); border-color: var(--accent-green); }
+
+    .drop-zone-text { font-size: 14px; color: var(--text-secondary); margin-bottom: 4px; }
+    .drop-zone-text strong { color: var(--accent-cyan); }
+    .drop-zone-hint { font-size: 12px; color: var(--text-muted); }
+
+    .file-info {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 12px; padding: 10px 14px;
+      background: rgba(16, 185, 129, 0.06);
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+    .file-info-icon { font-size: 18px; }
+    .file-info-name { font-size: 13px; font-weight: 500; flex: 1; }
+    .file-info-size { font-size: 11px; color: var(--text-muted); }
+    .file-remove {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; font-size: 16px; padding: 4px;
+      border-radius: 4px; transition: var(--transition);
+    }
+    .file-remove:hover { color: var(--accent-rose); background: rgba(244, 63, 94, 0.1); }
+
+    /* ========== MATCH BUTTON ========== */
+    .match-action { text-align: center; margin-bottom: 32px; }
+
+    .btn-match {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 48px;
+      background: var(--gradient-score);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: inherit;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-match::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+      opacity: 0;
+      transition: var(--transition);
+    }
+    .btn-match:hover::before { opacity: 1; }
+    .btn-match:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 212, 255, 0.3); }
+    .btn-match:disabled {
+      opacity: 0.4; cursor: not-allowed;
+      transform: none !important; box-shadow: none !important;
+    }
+    .btn-match:disabled::before { display: none; }
+
+    .btn-match .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    .btn-match.loading .spinner { display: block; }
+    .btn-match.loading .btn-text { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ========== RESULTS ========== */
+    .results-section { display: none; animation: fadeUp 0.6s ease; }
+    .results-section.visible { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Score Overview Row */
+    .score-overview {
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    /* Circular Score Gauge */
+    .score-gauge-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow-glow);
+    }
+    .score-gauge-title { font-size: 14px; color: var(--text-secondary); margin-bottom: 20px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+    .gauge-container { position: relative; width: 200px; height: 200px; margin: 0 auto 16px; }
+    .gauge-svg { transform: rotate(-90deg); width: 200px; height: 200px; }
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.06);
+      stroke-width: 12;
+    }
+    .gauge-fill {
+      fill: none;
+      stroke: url(#scoreGradient);
+      stroke-width: 12;
+      stroke-linecap: round;
+      stroke-dasharray: 565;
+      stroke-dashoffset: 565;
+      transition: stroke-dashoffset 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gauge-score {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+    .gauge-score-value { font-size: 42px; font-weight: 800; letter-spacing: -1px; }
+    .gauge-score-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .gauge-rating {
+      margin-top: 10px;
+      font-size: 14px; font-weight: 600;
+      padding: 5px 16px;
+      border-radius: 20px;
+      display: inline-block;
+    }
+    .rating-strong { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); }
+    .rating-moderate { background: rgba(245, 158, 11, 0.12); color: var(--accent-amber); }
+    .rating-below { background: rgba(249, 115, 22, 0.12); color: #fb923c; }
+    .rating-weak { background: rgba(244, 63, 94, 0.12); color: var(--accent-rose); }
+
+    /* Component Scores */
+    .components-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      backdrop-filter: blur(12px);
+    }
+    .components-title { font-size: 14px; color: var(--text-secondary); margin-bottom: 22px; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; }
+
+    .component-item { margin-bottom: 20px; }
+    .component-item:last-child { margin-bottom: 0; }
+    .component-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 8px;
+    }
+    .component-name { font-size: 14px; font-weight: 500; }
+    .component-score-row { display: flex; align-items: center; gap: 8px; }
+    .component-score { font-size: 20px; font-weight: 700; }
+    .component-weight {
+      font-size: 11px; color: var(--text-muted);
+      background: var(--bg-glass);
+      padding: 2px 8px; border-radius: 4px;
+    }
+    .component-bar {
+      height: 8px; border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+    .component-bar-fill {
+      height: 100%; border-radius: 4px;
+      width: 0%;
+      transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .bar-skill { background: var(--gradient-skill); }
+    .bar-experience { background: var(--gradient-exp); }
+    .bar-education { background: var(--gradient-edu); }
+    .bar-semantic { background: var(--gradient-semantic); }
+
+    .component-detail {
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 6px;
+      display: flex; justify-content: space-between;
+    }
+
+    /* Right Panel: Summary + Mandatory */
+    .right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+    .card-title {
+      font-size: 14px; font-weight: 500; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title-icon { font-size: 16px; }
+
+    .summary-text {
+      font-size: 13px; line-height: 1.7; color: var(--text-secondary);
+    }
+
+    /* Mandatory Requirements */
+    .mandatory-list { list-style: none; }
+    .mandatory-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-glass);
+      font-size: 13px; line-height: 1.5;
+    }
+    .mandatory-item:last-child { border-bottom: none; }
+    .mandatory-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .mandatory-met .mandatory-icon { color: var(--accent-green); }
+    .mandatory-unmet .mandatory-icon { color: var(--accent-rose); }
+    .mandatory-text { color: var(--text-secondary); }
+    .mandatory-score {
+      font-size: 11px; color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    /* ========== EVIDENCE SECTION ========== */
+    .evidence-section { margin-top: 28px; }
+    .evidence-section-title {
+      font-size: 14px; font-weight: 500; color: var(--text-secondary);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .evidence-tabs {
+      display: flex; gap: 8px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .evidence-tab {
+      padding: 8px 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+      background: transparent;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .evidence-tab:hover { border-color: var(--border-active); color: var(--text-primary); }
+    .evidence-tab.active {
+      background: rgba(0, 212, 255, 0.08);
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .evidence-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .evidence-card:hover { border-color: var(--border-active); transform: translateY(-2px); }
+
+    .evidence-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border-glass);
+    }
+    .evidence-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .evidence-label-jd { color: var(--accent-cyan); }
+    .evidence-label-resume { color: var(--accent-purple); }
+    .evidence-score-badge {
+      font-size: 12px; font-weight: 600;
+      padding: 3px 10px; border-radius: 12px;
+    }
+    .strength-strong { background: rgba(16, 185, 129, 0.12); color: var(--accent-green); }
+    .strength-moderate { background: rgba(245, 158, 11, 0.12); color: var(--accent-amber); }
+    .strength-weak { background: rgba(244, 63, 94, 0.12); color: var(--accent-rose); }
+
+    .evidence-card-body { padding: 14px 16px; }
+    .evidence-text { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+    .evidence-meta {
+      margin-top: 10px;
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+    .evidence-meta-item {
+      font-size: 11px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* Evidence pair (JD → Resume) */
+    .evidence-pair {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      align-items: stretch;
+      margin-bottom: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+    .evidence-pair:hover { border-color: var(--border-active); }
+
+    .evidence-side { padding: 16px; }
+    .evidence-side-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 10px;
+    }
+    .evidence-arrow {
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 12px;
+      color: var(--text-muted);
+      font-size: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 1px solid var(--border-glass);
+      border-right: 1px solid var(--border-glass);
+    }
+    .evidence-similarity {
+      text-align: center; font-size: 12px;
+      color: var(--text-muted); margin-top: 6px;
+    }
+
+    /* ========== QUALITY WARNINGS ========== */
+    .warnings-section { margin-top: 24px; }
+    .warning-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px;
+      background: rgba(245, 158, 11, 0.06);
+      border: 1px solid rgba(245, 158, 11, 0.15);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      font-size: 13px; color: var(--accent-amber);
+    }
+
+    /* ========== PROCESSING DETAILS ========== */
+    .details-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .detail-chip {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-size: 12px;
+    }
+    .detail-chip-label { color: var(--text-muted); margin-bottom: 4px; }
+    .detail-chip-value { font-weight: 600; color: var(--text-primary); }
+
+    /* ========== DOWNLOAD BUTTON ========== */
+    .btn-download {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: var(--radius-sm);
+      color: var(--accent-green);
+      font-family: inherit;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-download:hover { background: rgba(16, 185, 129, 0.18); transform: translateY(-1px); }
+
+    /* ========== FOOTER ========== */
+    .footer {
+      padding: 20px 32px;
+      border-top: 1px solid var(--border-glass);
+      text-align: center;
+      font-size: 12px; color: var(--text-muted);
+      margin-top: 40px;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 1200px) {
+      .score-overview { grid-template-columns: 1fr; }
+      .upload-section { grid-template-columns: 1fr; }
+      .evidence-grid { grid-template-columns: 1fr; }
+      .evidence-pair { grid-template-columns: 1fr; }
+      .evidence-arrow { padding: 8px; border-left: none; border-right: none; border-top: 1px solid var(--border-glass); border-bottom: 1px solid var(--border-glass); }
+    }
+
+    /* ========== TOAST NOTIFICATIONS ========== */
+    .toast-container {
+      position: fixed; top: 20px; right: 20px; z-index: 1000;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .toast {
+      padding: 12px 20px;
+      border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 500;
+      animation: slideIn 0.3s ease;
+      max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    .toast-error { background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); color: #fda4af; }
+    .toast-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; }
+    .toast-info { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(40px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    /* ========== EMPTY STATE ========== */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    .empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+    .empty-state-text { font-size: 15px; }
+    .empty-state-hint { font-size: 13px; margin-top: 8px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===== HEADER ===== -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">R</div>
+        <div>
+          <div class="header-title">Resume Matcher</div>
+          <div class="header-subtitle">AI-Powered Recruitment Dashboard</div>
+        </div>
+      </div>
+      <div class="header-status">
+        <span class="status-dot"></span>
+        <span>System Online</span>
+      </div>
+    </header>
+
+    <!-- ===== MAIN ===== -->
+    <main class="main">
+
+      <!-- Upload Section -->
+      <section class="upload-section">
+        <!-- JD Upload -->
+        <div class="upload-card">
+          <div class="upload-card-header">
+            <div class="upload-card-title">📋 Job Description</div>
+            <div class="upload-badge">
+              <span class="badge badge-pdf">PDF</span>
+              <span class="badge badge-docx">DOCX</span>
+            </div>
+          </div>
+          <div class="drop-zone" id="jdDropZone" data-target="jdFile">
+            <div class="drop-zone-icon">☁️</div>
+            <div class="drop-zone-text">Drag & drop or <strong>click to browse</strong></div>
+            <div class="drop-zone-hint">Supported: .pdf, .docx — Max 25 MB</div>
+            <input type="file" id="jdFile" accept=".pdf,.docx" hidden>
+          </div>
+          <div class="file-info" id="jdFileInfo" style="display:none">
+            <span class="file-info-icon">📄</span>
+            <span class="file-info-name" id="jdFileName"></span>
+            <span class="file-info-size" id="jdFileSize"></span>
+            <button class="file-remove" id="jdRemove" title="Remove">✕</button>
+          </div>
+        </div>
+
+        <!-- Resume Upload -->
+        <div class="upload-card">
+          <div class="upload-card-header">
+            <div class="upload-card-title">📄 Resume</div>
+            <div class="upload-badge">
+              <span class="badge badge-pdf">PDF</span>
+              <span class="badge badge-docx">DOCX</span>
+            </div>
+          </div>
+          <div class="drop-zone" id="resumeDropZone" data-target="resumeFile">
+            <div class="drop-zone-icon">☁️</div>
+            <div class="drop-zone-text">Drag & drop or <strong>click to browse</strong></div>
+            <div class="drop-zone-hint">Supported: .pdf, .docx — Max 25 MB</div>
+            <input type="file" id="resumeFile" accept=".pdf,.docx" hidden>
+          </div>
+          <div class="file-info" id="resumeFileInfo" style="display:none">
+            <span class="file-info-icon">📄</span>
+            <span class="file-info-name" id="resumeFileName"></span>
+            <span class="file-info-size" id="resumeFileSize"></span>
+            <button class="file-remove" id="resumeRemove" title="Remove">✕</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Match Button -->
+      <div class="match-action">
+        <button class="btn-match" id="matchBtn" disabled>
+          <span class="btn-text">⚡ Analyze Match</span>
+          <span class="spinner"></span>
+        </button>
+      </div>
+
+      <!-- ===== RESULTS ===== -->
+      <section class="results-section" id="resultsSection">
+
+        <!-- Score Overview -->
+        <div class="score-overview">
+          <!-- Gauge -->
+          <div class="score-gauge-card">
+            <div class="score-gauge-title">Candidate Suitability Score</div>
+            <div class="gauge-container">
+              <svg class="gauge-svg" viewBox="0 0 200 200">
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#00d4ff"/>
+                    <stop offset="50%" stop-color="#3b82f6"/>
+                    <stop offset="100%" stop-color="#8b5cf6"/>
+                  </linearGradient>
+                </defs>
+                <circle class="gauge-bg" cx="100" cy="100" r="90"/>
+                <circle class="gauge-fill" id="gaugeFill" cx="100" cy="100" r="90"/>
+              </svg>
+              <div class="gauge-score">
+                <div class="gauge-score-value" id="finalScoreValue">0</div>
+                <div class="gauge-score-label">out of 100</div>
+              </div>
+            </div>
+            <div class="gauge-rating" id="scoreRating"></div>
+          </div>
+
+          <!-- Component Bars -->
+          <div class="components-card">
+            <div class="components-title">Score Breakdown</div>
+            <div id="componentsList"></div>
+          </div>
+
+          <!-- Right: Summary + Mandatory -->
+          <div class="right-panel">
+            <div class="card" id="summaryCard">
+              <div class="card-title"><span class="card-title-icon">📝</span> Recruiter Summary</div>
+              <div class="summary-text" id="summaryText"></div>
+            </div>
+            <div class="card" id="mandatoryCard">
+              <div class="card-title"><span class="card-title-icon">✅</span> Mandatory Requirements</div>
+              <ul class="mandatory-list" id="mandatoryList"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Evidence -->
+        <section class="evidence-section">
+          <div class="evidence-section-title">
+            <span>🔍</span> Match Evidence
+            <button class="btn-download" id="downloadBtn">📥 Download Report</button>
+          </div>
+          <div class="evidence-tabs" id="evidenceTabs"></div>
+          <div id="evidenceContent"></div>
+        </section>
+
+        <!-- Quality Warnings -->
+        <div class="warnings-section" id="warningsSection" style="display:none"></div>
+
+        <!-- Processing Details -->
+        <div class="details-row" id="detailsRow"></div>
+
+      </section>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">📊</div>
+        <div class="empty-state-text">Upload a JD and Resume to start matching</div>
+        <div class="empty-state-hint">The system will analyze both documents and provide a detailed match report</div>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      Resume Matcher v0.1.0 — Deterministic • Explainable • Auditable
+    </footer>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // ========== STATE ==========
+    let jdFile = null;
+    let resumeFile = null;
+    let reportData = null;
+
+    // ========== UTILS ==========
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function animateCounter(element, target, duration = 1200) {
+      const start = 0;
+      const startTime = performance.now();
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = start + (target - start) * eased;
+        element.textContent = current.toFixed(current >= 10 ? 1 : 2);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    // ========== FILE UPLOAD ==========
+    function setupDropZone(zoneId, fileInputId, fileInfoId, fileNameId, fileSizeId, removeId, setter) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(fileInputId);
+      const info = document.getElementById(fileInfoId);
+      const nameEl = document.getElementById(fileNameId);
+      const sizeEl = document.getElementById(fileSizeId);
+      const removeBtn = document.getElementById(removeId);
+
+      zone.addEventListener('click', () => input.click());
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      });
+
+      input.addEventListener('change', () => {
+        if (input.files[0]) handleFile(input.files[0]);
+      });
+
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setter(null);
+        input.value = '';
+        zone.classList.remove('has-file');
+        info.style.display = 'none';
+        updateMatchButton();
+      });
+
+      function handleFile(file) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'docx'].includes(ext)) {
+          showToast('Only PDF and DOCX files are accepted', 'error');
+          return;
+        }
+        if (file.size > 25 * 1024 * 1024) {
+          showToast('File size exceeds 25 MB limit', 'error');
+          return;
+        }
+        setter(file);
+        zone.classList.add('has-file');
+        nameEl.textContent = file.name;
+        sizeEl.textContent = formatBytes(file.size);
+        info.style.display = 'flex';
+        updateMatchButton();
+        showToast(`${file.name} uploaded`, 'success');
+      }
+    }
+
+    function updateMatchButton() {
+      document.getElementById('matchBtn').disabled = !(jdFile && resumeFile);
+    }
+
+    // ========== API CALL ==========
+    async function runMatch() {
+      const btn = document.getElementById('matchBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('resultsSection').classList.remove('visible');
+
+      const formData = new FormData();
+      formData.append('jd_file', jdFile);
+      formData.append('resume_file', resumeFile);
+
+      try {
+        const response = await fetch('/match', { method: 'POST', body: formData });
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.detail || 'Matching failed');
+        }
+        reportData = await response.json();
+        renderResults(reportData);
+        showToast('Analysis complete!', 'success');
+      } catch (err) {
+        showToast(err.message, 'error');
+        document.getElementById('emptyState').style.display = 'block';
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    // ========== RENDER RESULTS ==========
+    function renderResults(data) {
+      const section = document.getElementById('resultsSection');
+      section.classList.add('visible');
+
+      // 1. Gauge
+      const finalScore = data.candidate_score.final_score;
+      const circumference = 2 * Math.PI * 90; // 565.48
+      const offset = circumference - (finalScore / 100) * circumference;
+      setTimeout(() => {
+        document.getElementById('gaugeFill').style.strokeDashoffset = offset;
+      }, 100);
+      animateCounter(document.getElementById('finalScoreValue'), finalScore);
+
+      // Rating
+      const ratingEl = document.getElementById('scoreRating');
+      let ratingText, ratingClass;
+      if (finalScore >= 75) { ratingText = '🟢 Strong Candidate'; ratingClass = 'rating-strong'; }
+      else if (finalScore >= 55) { ratingText = '🟡 Moderate Candidate'; ratingClass = 'rating-moderate'; }
+      else if (finalScore >= 35) { ratingText = '🟠 Below Average'; ratingClass = 'rating-below'; }
+      else { ratingText = '🔴 Weak Candidate'; ratingClass = 'rating-weak'; }
+      ratingEl.textContent = ratingText;
+      ratingEl.className = `gauge-rating ${ratingClass}`;
+
+      // 2. Component bars
+      const componentColors = {
+        'skill': { gradient: 'bar-skill', label: '💡 Skills', color: '#00d4ff' },
+        'work_experience': { gradient: 'bar-experience', label: '💼 Work Experience', color: '#8b5cf6' },
+        'education': { gradient: 'bar-education', label: '🎓 Education', color: '#14b8a6' },
+        'semantic_match': { gradient: 'bar-semantic', label: '🧠 Semantic Match', color: '#f59e0b' },
+      };
+      const compList = document.getElementById('componentsList');
+      compList.innerHTML = '';
+      data.candidate_score.components.forEach((comp, i) => {
+        const meta = componentColors[comp.name] || { gradient: 'bar-skill', label: comp.name, color: '#fff' };
+        const div = document.createElement('div');
+        div.className = 'component-item';
+        div.innerHTML = `
+          <div class="component-header">
+            <span class="component-name">${meta.label}</span>
+            <div class="component-score-row">
+              <span class="component-score" style="color:${meta.color}">${comp.raw_score.toFixed(1)}</span>
+              <span class="component-weight">${(comp.weight * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+          <div class="component-bar">
+            <div class="component-bar-fill ${meta.gradient}" id="bar-${comp.name}" style="width:0%"></div>
+          </div>
+          <div class="component-detail">
+            <span>${comp.explanation}</span>
+            <span>+${comp.weighted_contribution.toFixed(1)}</span>
+          </div>
+        `;
+        compList.appendChild(div);
+        setTimeout(() => {
+          document.getElementById(`bar-${comp.name}`).style.width = `${comp.raw_score}%`;
+        }, 200 + i * 100);
+      });
+
+      // 3. Summary
+      document.getElementById('summaryText').textContent = data.recruiter_summary || 'No summary available.';
+
+      // 4. Mandatory Requirements
+      const mandList = document.getElementById('mandatoryList');
+      mandList.innerHTML = '';
+      if (data.mandatory_requirements && data.mandatory_requirements.length > 0) {
+        document.getElementById('mandatoryCard').style.display = 'block';
+        data.mandatory_requirements.forEach(req => {
+          const li = document.createElement('li');
+          li.className = `mandatory-item ${req.is_met ? 'mandatory-met' : 'mandatory-unmet'}`;
+          li.innerHTML = `
+            <span class="mandatory-icon">${req.is_met ? '✅' : '❌'}</span>
+            <div>
+              <div class="mandatory-text">${req.requirement_text}</div>
+              <div class="mandatory-score">${req.explanation || `Score: ${(req.best_match_score * 100).toFixed(0)}%`}</div>
+            </div>
+          `;
+          mandList.appendChild(li);
+        });
+      } else {
+        document.getElementById('mandatoryCard').style.display = 'none';
+      }
+
+      // 5. Evidence tabs
+      renderEvidenceTabs(data);
+
+      // 6. Quality warnings
+      const warningsEl = document.getElementById('warningsSection');
+      if (data.data_quality_warnings && data.data_quality_warnings.length > 0) {
+        warningsEl.style.display = 'block';
+        warningsEl.innerHTML = `<div class="card-title"><span class="card-title-icon">⚠️</span> Quality Warnings</div>`;
+        data.data_quality_warnings.forEach(w => {
+          warningsEl.innerHTML += `<div class="warning-item">⚠️ ${w}</div>`;
+        });
+      } else {
+        warningsEl.style.display = 'none';
+      }
+
+      // 7. Processing details
+      const details = data.processing_details || {};
+      const detailsRow = document.getElementById('detailsRow');
+      detailsRow.innerHTML = '';
+      const chips = [
+        { label: 'JD File', value: details.jd_filename || '—' },
+        { label: 'Resume File', value: details.resume_filename || '—' },
+        { label: 'JD Blocks', value: details.jd_block_count || '—' },
+        { label: 'Resume Blocks', value: details.resume_block_count || '—' },
+        { label: 'Schema Version', value: data._schema_version || '—' },
+        { label: 'Report ID', value: data._report_id || '—' },
+        { label: 'Processed At', value: details.processed_at ? new Date(details.processed_at).toLocaleString() : '—' },
+        { label: 'Config Hash', value: details.config_hash || '—' },
+      ];
+      chips.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'detail-chip';
+        div.innerHTML = `<div class="detail-chip-label">${c.label}</div><div class="detail-chip-value">${c.value}</div>`;
+        detailsRow.appendChild(div);
+      });
+
+      // Scroll to results
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ========== EVIDENCE TABS ==========
+    function renderEvidenceTabs(data) {
+      const tabsEl = document.getElementById('evidenceTabs');
+      const contentEl = document.getElementById('evidenceContent');
+      tabsEl.innerHTML = '';
+
+      const tabs = [
+        { key: 'strongest', label: '🏆 Strongest Matches', data: data.strongest_matches },
+        { key: 'weakest', label: '⚡ Weakest Matches', data: data.weakest_matches },
+        { key: 'skill', label: '💡 Skills', data: data.skill_evidence?.evidence || [] },
+        { key: 'experience', label: '💼 Experience', data: data.experience_evidence?.evidence || [] },
+        { key: 'education', label: '🎓 Education', data: data.education_evidence?.evidence || [] },
+        { key: 'semantic', label: '🧠 Semantic', data: data.semantic_evidence?.evidence || [] },
+      ].filter(t => t.data && t.data.length > 0);
+
+      tabs.forEach((tab, i) => {
+        const btn = document.createElement('button');
+        btn.className = `evidence-tab ${i === 0 ? 'active' : ''}`;
+        btn.textContent = `${tab.label} (${tab.data.length})`;
+        btn.addEventListener('click', () => {
+          tabsEl.querySelectorAll('.evidence-tab').forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          renderEvidenceList(tab.data, contentEl);
+        });
+        tabsEl.appendChild(btn);
+      });
+
+      if (tabs.length > 0) renderEvidenceList(tabs[0].data, contentEl);
+    }
+
+    function renderEvidenceList(evidenceItems, container) {
+      container.innerHTML = '';
+      if (!evidenceItems || evidenceItems.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-text">No evidence items</div></div>';
+        return;
+      }
+
+      evidenceItems.forEach(ev => {
+        const strengthClass = ev.match_strength === 'strong' ? 'strength-strong'
+          : ev.match_strength === 'moderate' ? 'strength-moderate' : 'strength-weak';
+        const simPercent = (ev.similarity_score * 100).toFixed(1);
+
+        const pair = document.createElement('div');
+        pair.className = 'evidence-pair';
+        pair.innerHTML = `
+          <div class="evidence-side">
+            <div class="evidence-side-header">
+              <span class="evidence-label evidence-label-jd">JD Requirement</span>
+              <span class="evidence-meta-item">📍 ${ev.jd_section || '—'}</span>
+            </div>
+            <div class="evidence-text">${ev.jd_text || '—'}</div>
+            <div class="evidence-meta">
+              ${ev.jd_line_numbers ? `<span class="evidence-meta-item">Lines: ${ev.jd_line_numbers.join(', ')}</span>` : ''}
+            </div>
+          </div>
+          <div class="evidence-arrow">
+            <div>
+              <div>→</div>
+              <div class="evidence-similarity">${simPercent}%</div>
+            </div>
+          </div>
+          <div class="evidence-side">
+            <div class="evidence-side-header">
+              <span class="evidence-label evidence-label-resume">Resume Match</span>
+              <span class="evidence-score-badge ${strengthClass}">${ev.match_strength || '—'}</span>
+            </div>
+            <div class="evidence-text">${ev.resume_text || '—'}</div>
+            <div class="evidence-meta">
+              ${ev.resume_line_numbers ? `<span class="evidence-meta-item">Lines: ${ev.resume_line_numbers.join(', ')}</span>` : ''}
+              ${ev.uncertainty ? '<span class="evidence-meta-item" style="color:var(--accent-amber)">⚠ Uncertain</span>' : ''}
+            </div>
+          </div>
+        `;
+        container.appendChild(pair);
+      });
+    }
+
+    // ========== DOWNLOAD ==========
+    function downloadReport() {
+      if (!reportData) return;
+      const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `match_report_${reportData._report_id || 'report'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Report downloaded', 'success');
+    }
+
+    // ========== INIT ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      setupDropZone('jdDropZone', 'jdFile', 'jdFileInfo', 'jdFileName', 'jdFileSize', 'jdRemove', (f) => { jdFile = f; });
+      setupDropZone('resumeDropZone', 'resumeFile', 'resumeFileInfo', 'resumeFileName', 'resumeFileSize', 'resumeRemove', (f) => { resumeFile = f; });
+      document.getElementById('matchBtn').addEventListener('click', runMatch);
+      document.getElementById('downloadBtn').addEventListener('click', downloadReport);
+    });
+  </script>
+</body>
+</html>

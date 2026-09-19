@@ -14,7 +14,8 @@ from typing import Annotated
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from resume_matcher.config import AppConfig, load_config, setup_logging
 from resume_matcher.domain.enums import DocumentType
@@ -57,11 +58,23 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     # Register routes
     _register_routes(app)
+
+    # Serve static dashboard UI
+    static_dir = Path(__file__).parent / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
     return app
 
 
 def _register_routes(app: FastAPI) -> None:
     """Register all API routes."""
+
+    @app.get("/", include_in_schema=False)
+    async def root():
+        """Serve the HR dashboard UI."""
+        static_dir = Path(__file__).parent / "static"
+        return FileResponse(str(static_dir / "index.html"))
 
     @app.get("/health")
     async def health():
