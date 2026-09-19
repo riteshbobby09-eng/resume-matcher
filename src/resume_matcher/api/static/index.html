@@ -1373,21 +1373,6 @@
         document.getElementById('mandatoryCard').style.display = 'none';
       }
 
-      // 5. Evidence tabs
-      renderEvidenceTabs(data);
-
-      // 6. Quality warnings
-      const warningsEl = document.getElementById('warningsSection');
-      if (data.data_quality_warnings && data.data_quality_warnings.length > 0) {
-        warningsEl.style.display = 'block';
-        warningsEl.innerHTML = `<div class="card-title"><span class="card-title-icon">⚠️</span> Quality Warnings</div>`;
-        data.data_quality_warnings.forEach(w => {
-          warningsEl.innerHTML += `<div class="warning-item">⚠️ ${w}</div>`;
-        });
-      } else {
-        warningsEl.style.display = 'none';
-      }
-
       // 5. Comparison Parameters
       renderComparisonParameters(data);
 
