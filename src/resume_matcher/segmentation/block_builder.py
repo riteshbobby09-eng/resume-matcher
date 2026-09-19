@@ -44,6 +44,7 @@ class BlockBuilder:
         document_id: str = "",
         document_type: DocumentType = DocumentType.RESUME,
         total_lines: int = 0,
+        section_break_lines: set[int] | None = None,
     ) -> list[Block]:
         """
         Group sentences into blocks.
@@ -53,6 +54,7 @@ class BlockBuilder:
             document_id: Document ID for traceability.
             document_type: Whether this is a JD or resume.
             total_lines: Total lines in document (for position calculation).
+            section_break_lines: Optional line numbers of detected section headings.
 
         Returns:
             List of Block objects.
@@ -60,11 +62,18 @@ class BlockBuilder:
         if not sentences:
             return []
 
-        raw_blocks = self._create_raw_blocks(sentences, document_id, document_type)
+        raw_blocks = self._create_raw_blocks(
+            sentences,
+            document_id,
+            document_type,
+            section_break_lines=section_break_lines,
+        )
 
         # Merge short blocks if configured
         if self._merge_short:
-            raw_blocks = self._merge_short_blocks(raw_blocks)
+            raw_blocks = self._merge_short_blocks(
+                raw_blocks, section_breaks=section_break_lines
+            )
 
         # Compute position in document
         if total_lines > 0:
@@ -85,25 +94,34 @@ class BlockBuilder:
         sentences: list[Sentence],
         document_id: str,
         document_type: DocumentType,
+        section_break_lines: set[int] | None = None,
     ) -> list[Block]:
         """
         Create initial blocks by grouping sentences.
 
         Groups consecutive sentences up to max_sentences limit.
-        Starts a new block on natural breaks (gaps in line numbers).
+        Starts a new block on natural breaks (gaps in line numbers or section headings).
         """
         blocks: list[Block] = []
         current_sentences: list[Sentence] = []
+        section_breaks = section_break_lines or set()
 
         for i, sentence in enumerate(sentences):
-            # Check for natural break: gap in line numbers
+            # Check for natural break: gap in line numbers OR starts at section heading
             is_break = False
-            if current_sentences and sentence.source_line_numbers and current_sentences[-1].source_line_numbers:
-                prev_max = max(current_sentences[-1].source_line_numbers)
-                curr_min = min(sentence.source_line_numbers)
-                # Gap of 2+ lines suggests a paragraph break
-                if curr_min - prev_max > 2:
+            sentence_lines = set(sentence.source_line_numbers)
+            if current_sentences:
+                if sentence_lines & section_breaks:
                     is_break = True
+                elif (
+                    sentence.source_line_numbers
+                    and current_sentences[-1].source_line_numbers
+                ):
+                    prev_max = max(current_sentences[-1].source_line_numbers)
+                    curr_min = min(sentence.source_line_numbers)
+                    # Gap of 2+ lines suggests a paragraph break
+                    if curr_min - prev_max > 2:
+                        is_break = True
 
             # Check for max size
             at_max = len(current_sentences) >= self._max_sentences
@@ -124,16 +142,19 @@ class BlockBuilder:
 
         return blocks
 
-    def _merge_short_blocks(self, blocks: list[Block]) -> list[Block]:
+    def _merge_short_blocks(
+        self, blocks: list[Block], section_breaks: set[int] | None = None
+    ) -> list[Block]:
         """
         Merge blocks that are too short (below min_chars) with neighbors.
 
         Short blocks are merged with the NEXT block if possible,
-        otherwise with the PREVIOUS block.
+        otherwise with the PREVIOUS block. Blocks across section headings are never merged.
         """
         if len(blocks) <= 1:
             return blocks
 
+        breaks = section_breaks or set()
         merged: list[Block] = []
         i = 0
 
@@ -141,8 +162,15 @@ class BlockBuilder:
             block = blocks[i]
 
             if len(block.text) < self._min_chars and i + 1 < len(blocks):
-                # Merge with next block
                 next_block = blocks[i + 1]
+                # Never merge across a section break
+                next_lines = set(next_block.source_line_numbers)
+                if next_lines & breaks:
+                    merged.append(block)
+                    i += 1
+                    continue
+
+                # Merge with next block
                 combined_sentences = block.sentences + next_block.sentences
                 merged_block = Block(
                     sentences=combined_sentences,

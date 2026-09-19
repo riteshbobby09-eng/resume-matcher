@@ -197,6 +197,29 @@ class MandatoryRequirement:
 
 
 @dataclass
+class ComparisonParameter:
+    """
+    A structured comparison parameter extracted from JD requirements
+    and evaluated against candidate resume evidence.
+    """
+
+    parameter_id: str = field(default_factory=lambda: uuid.uuid4().hex[:10])
+    category: str = "requirement"  # mandatory, skill, experience, education, responsibility, requirement
+    requirement_text: str = ""
+    is_mandatory: bool = False
+    status: str = "not_found"  # found, partial, not_found
+    confidence_score: float = 0.0  # 0.0 – 100.0
+    similarity_score: float = 0.0  # 0.0 – 1.0
+    matched_resume_text: str = ""
+    matched_resume_lines: list[int] = field(default_factory=list)
+    source_jd_lines: list[int] = field(default_factory=list)
+    match_strength: MatchStrength = MatchStrength.NONE
+    explanation: str = ""
+    jd_section: SectionType = SectionType.UNKNOWN
+    resume_section: SectionType = SectionType.UNKNOWN
+
+
+@dataclass
 class CandidateScore:
     """Complete scoring result for a single candidate–JD pair."""
 
@@ -207,6 +230,7 @@ class CandidateScore:
     mandatory_requirements: list[MandatoryRequirement] = field(default_factory=list)
     all_mandatory_met: bool = True
     review_flags: list[str] = field(default_factory=list)
+    comparison_parameters: list[ComparisonParameter] = field(default_factory=list)
     processing_version: str = "0.1.0"
     scored_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 

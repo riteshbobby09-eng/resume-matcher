@@ -24,6 +24,7 @@ from resume_matcher.domain.enums import MatchStrength, SectionType
 from resume_matcher.domain.models import (
     Block,
     CandidateScore,
+    ComparisonParameter,
     MatchEvidence,
     ProcessedDocument,
     ScoreComponent,
@@ -39,6 +40,8 @@ class RecruiterReport:
         self.report_id: str = uuid.uuid4().hex[:12]
         self.processing_details: dict = {}
         self.candidate_score: dict = {}
+        self.comparison_summary: dict = {}
+        self.comparison_parameters: list[dict] = []
         self.skill_evidence: dict = {}
         self.experience_evidence: dict = {}
         self.education_evidence: dict = {}
@@ -162,6 +165,33 @@ class ReportBuilder:
             if not r.is_met
         ]
 
+        # Comparison parameters (requirements evaluated against resume)
+        params = candidate_score.comparison_parameters
+        report.comparison_parameters = [
+            self._comparison_param_to_dict(p) for p in params
+        ]
+
+        found_count = sum(1 for p in params if p.status == "found")
+        partial_count = sum(1 for p in params if p.status == "partial")
+        missing_count = sum(1 for p in params if p.status == "not_found")
+        mandatory_total = sum(1 for p in params if p.is_mandatory)
+        mandatory_found = sum(1 for p in params if p.is_mandatory and p.status == "found")
+
+        report.comparison_summary = {
+            "total_parameters": len(params),
+            "found_in_resume": found_count,
+            "partial_match": partial_count,
+            "missing_in_resume": missing_count,
+            "coverage_percentage": (
+                round((found_count / len(params) * 100.0), 1) if params else 0.0
+            ),
+            "mandatory_total": mandatory_total,
+            "mandatory_found": mandatory_found,
+            "mandatory_satisfied": (
+                bool(mandatory_found == mandatory_total) if mandatory_total > 0 else True
+            ),
+        }
+
         # Flags and warnings
         report.review_flags = list(candidate_score.review_flags)
         report.data_quality_warnings = self._collect_quality_warnings(jd_doc, resume_doc)
@@ -171,6 +201,25 @@ class ReportBuilder:
 
         logger.info("Report built: %s", report.report_id)
         return report
+
+    def _comparison_param_to_dict(self, p: ComparisonParameter) -> dict:
+        """Convert ComparisonParameter to a serializable dict."""
+        return {
+            "parameter_id": p.parameter_id,
+            "category": p.category,
+            "requirement_text": p.requirement_text,
+            "is_mandatory": p.is_mandatory,
+            "status": p.status,
+            "confidence_score": p.confidence_score,
+            "similarity_score": p.similarity_score,
+            "matched_resume_text": p.matched_resume_text,
+            "matched_resume_lines": p.matched_resume_lines,
+            "source_jd_lines": p.source_jd_lines,
+            "match_strength": p.match_strength.value,
+            "explanation": p.explanation,
+            "jd_section": p.jd_section.value,
+            "resume_section": p.resume_section.value,
+        }
 
     def _build_evidence_group(
         self,

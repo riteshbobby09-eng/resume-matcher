@@ -80,7 +80,12 @@ class MatchingService:
             mandatory_blocks, evidence
         )
 
-        # 4. Component scores
+        # 4. Extract comparison parameters based on JD requirements
+        comparison_params = self._evidence_matcher.extract_comparison_parameters(
+            jd_blocks, evidence, mandatory_reqs, resume_blocks=resume_blocks
+        )
+
+        # 5. Component scores
         weights = self._config.scoring.weights
         skill_score = self._skill_scorer.score(evidence, jd_blocks, weights.skill)
         exp_score = self._exp_scorer.score(evidence, jd_blocks, weights.work_experience)
@@ -91,12 +96,13 @@ class MatchingService:
 
         components = [skill_score, exp_score, edu_score, semantic_score]
 
-        # 5. Final score
+        # 6. Final score
         candidate_score = self._final_scorer.calculate(
             components=components,
             mandatory_requirements=mandatory_reqs,
             candidate_id=resume_doc.meta.document_id,
             jd_id=jd_doc.meta.document_id,
+            comparison_parameters=comparison_params,
         )
 
         return candidate_score, evidence

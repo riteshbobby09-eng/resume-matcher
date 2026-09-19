@@ -207,6 +207,10 @@ class SectionDetector:
 
     def _try_detect(self, text: str, line_number: int) -> DetectedSection | None:
         """Try to detect a section heading from a line of text."""
+        # Key-value lines like "CGPA: 8.5/10.0", "Email: ...", "Phone: ..." are not headings
+        if ":" in text and not text.rstrip().endswith(":"):
+            return None
+
         # Clean text for matching
         clean = self._normalize_for_matching(text)
 

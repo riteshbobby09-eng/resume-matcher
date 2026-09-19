@@ -507,6 +507,336 @@
       color: var(--text-muted); margin-top: 6px;
     }
 
+    /* ========== COMPARISON PARAMETERS SECTION ========== */
+    .comparison-section {
+      margin-top: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+    .comparison-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .comparison-section-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .comparison-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .comparison-stats {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .stat-chip {
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stat-chip.stat-coverage {
+      border-color: rgba(0, 212, 255, 0.3);
+      color: var(--accent-cyan);
+      background: rgba(0, 212, 255, 0.08);
+    }
+    .stat-chip.stat-mandatory {
+      border-color: rgba(16, 185, 129, 0.3);
+      color: var(--accent-green);
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .stat-chip.stat-mandatory-fail {
+      border-color: rgba(244, 63, 94, 0.3);
+      color: var(--accent-rose);
+      background: rgba(244, 63, 94, 0.08);
+    }
+    .comparison-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border-glass);
+      padding-bottom: 16px;
+    }
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border-glass);
+      background: var(--bg-glass);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+    .filter-pill:hover {
+      border-color: var(--accent-cyan);
+      color: var(--text-primary);
+    }
+    .filter-pill.active {
+      background: rgba(0, 212, 255, 0.15);
+      border-color: var(--accent-cyan);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.2);
+    }
+    .filter-pill.pill-found.active {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: var(--accent-green);
+      color: #6ee7b7;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    }
+    .filter-pill.pill-partial.active {
+      background: rgba(245, 158, 11, 0.2);
+      border-color: var(--accent-amber);
+      color: #fde68a;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.2);
+    }
+    .filter-pill.pill-missing.active {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--accent-rose);
+      color: #fda4af;
+      box-shadow: 0 0 12px rgba(244, 63, 94, 0.2);
+    }
+    .filter-pill.pill-mandatory.active {
+      background: rgba(139, 92, 246, 0.2);
+      border-color: var(--accent-purple);
+      color: #c4b5fd;
+      box-shadow: 0 0 12px rgba(139, 92, 246, 0.2);
+    }
+    .comparison-search-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .category-select, .param-search-input {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      padding: 7px 12px;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+    .category-select:focus, .param-search-input:focus {
+      border-color: var(--accent-cyan);
+    }
+    .category-select option {
+      background: #0f172a;
+      color: #fff;
+    }
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 11px;
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .param-search-input {
+      padding-left: 28px;
+      width: 220px;
+    }
+    .param-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: var(--transition);
+    }
+    .param-card:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.035);
+    }
+    .param-card.param-found {
+      border-left: 3px solid var(--accent-green);
+    }
+    .param-card.param-partial {
+      border-left: 3px solid var(--accent-amber);
+    }
+    .param-card.param-not_found {
+      border-left: 3px solid var(--accent-rose);
+    }
+    .param-grid {
+      display: grid;
+      grid-template-columns: 1fr 140px 1.2fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .param-jd-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .param-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .param-badge-category {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+    }
+    .param-badge-mandatory {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(244, 63, 94, 0.2);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+    .param-line-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .param-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    .param-status-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--bg-glass);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-glass);
+    }
+    .param-status-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+    }
+    .status-pill-found {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+    .status-pill-partial {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fde68a;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .status-pill-not_found {
+      background: rgba(244, 63, 94, 0.2);
+      color: #fda4af;
+      border: 1px solid rgba(244, 63, 94, 0.4);
+    }
+    .param-conf-bar {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .param-conf-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+    .param-score-num {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .param-resume-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .param-resume-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .param-resume-section {
+      font-size: 11px;
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+    .param-resume-text {
+      font-size: 13px;
+      line-height: 1.5;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--accent-cyan);
+    }
+    .param-missing-text {
+      font-size: 12px;
+      color: #fda4af;
+      background: rgba(244, 63, 94, 0.06);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border-left: 2px solid var(--accent-rose);
+      font-style: italic;
+    }
+    .param-explanation {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    @media (max-width: 1000px) {
+      .param-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .param-status-col {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+      .param-conf-bar {
+        width: 120px;
+      }
+    }
+
     /* ========== QUALITY WARNINGS ========== */
     .warnings-section { margin-top: 24px; }
     .warning-item {
@@ -724,6 +1054,54 @@
             </div>
           </div>
         </div>
+
+        <!-- Requirement vs Resume Comparison Parameters -->
+        <section class="comparison-section" id="comparisonSection">
+          <div class="comparison-section-header">
+            <div>
+              <div class="comparison-section-title">
+                <span>🎯</span> Requirement vs Resume Comparison Parameters
+              </div>
+              <div class="comparison-subtitle">
+                Filtered strictly by JD requirements and evaluated against candidate's resume with sentence-level precision
+              </div>
+            </div>
+            <!-- Summary Stats -->
+            <div class="comparison-stats" id="comparisonStats"></div>
+          </div>
+
+          <!-- Controls: Filters & Search -->
+          <div class="comparison-controls">
+            <!-- Filter Pills -->
+            <div class="filter-pills" id="statusFilterPills">
+              <button class="filter-pill active" data-filter="all">All (<span id="countAll">0</span>)</button>
+              <button class="filter-pill pill-found" data-filter="found">Found in Resume ✅ (<span id="countFound">0</span>)</button>
+              <button class="filter-pill pill-partial" data-filter="partial">Partial Match ⚠️ (<span id="countPartial">0</span>)</button>
+              <button class="filter-pill pill-missing" data-filter="not_found">Missing in Resume ❌ (<span id="countMissing">0</span>)</button>
+              <button class="filter-pill pill-mandatory" data-filter="mandatory">Mandatory Only 🚨 (<span id="countMandatory">0</span>)</button>
+            </div>
+
+            <!-- Category & Search -->
+            <div class="comparison-search-box">
+              <select class="category-select" id="categorySelect">
+                <option value="all">All Categories</option>
+                <option value="mandatory">Mandatory</option>
+                <option value="skill">Skills</option>
+                <option value="experience">Experience</option>
+                <option value="education">Education</option>
+                <option value="responsibility">Responsibilities</option>
+                <option value="requirement">Other Requirements</option>
+              </select>
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="paramSearchInput" class="param-search-input" placeholder="Filter requirements...">
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparison List -->
+          <div class="comparison-list" id="comparisonList"></div>
+        </section>
 
         <!-- Evidence -->
         <section class="evidence-section">
@@ -980,7 +1358,25 @@
         warningsEl.style.display = 'none';
       }
 
-      // 7. Processing details
+      // 5. Comparison Parameters
+      renderComparisonParameters(data);
+
+      // 6. Evidence tabs
+      renderEvidenceTabs(data);
+
+      // 7. Quality warnings
+      const warningsEl = document.getElementById('warningsSection');
+      if (data.data_quality_warnings && data.data_quality_warnings.length > 0) {
+        warningsEl.style.display = 'block';
+        warningsEl.innerHTML = `<div class="card-title"><span class="card-title-icon">⚠️</span> Quality Warnings</div>`;
+        data.data_quality_warnings.forEach(w => {
+          warningsEl.innerHTML += `<div class="warning-item">⚠️ ${w}</div>`;
+        });
+      } else {
+        warningsEl.style.display = 'none';
+      }
+
+      // 8. Processing details
       const details = data.processing_details || {};
       const detailsRow = document.getElementById('detailsRow');
       detailsRow.innerHTML = '';
@@ -1003,6 +1399,185 @@
 
       // Scroll to results
       section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ========== COMPARISON PARAMETERS (REQUIREMENTS VS RESUME) ==========
+    let allComparisonParams = [];
+    let currentStatusFilter = 'all';
+    let currentCategoryFilter = 'all';
+    let currentSearchQuery = '';
+
+    function renderComparisonParameters(data) {
+      allComparisonParams = data.comparison_parameters || [];
+      const summary = data.comparison_summary || {};
+
+      // 1. Update stats chips
+      const statsEl = document.getElementById('comparisonStats');
+      statsEl.innerHTML = '';
+
+      const total = summary.total_parameters || allComparisonParams.length;
+      const found = summary.found_in_resume || allComparisonParams.filter(p => p.status === 'found').length;
+      const partial = summary.partial_match || allComparisonParams.filter(p => p.status === 'partial').length;
+      const missing = summary.missing_in_resume || allComparisonParams.filter(p => p.status === 'not_found').length;
+      const mandatoryTotal = summary.mandatory_total || allComparisonParams.filter(p => p.is_mandatory).length;
+      const mandatoryFound = summary.mandatory_found || allComparisonParams.filter(p => p.is_mandatory && p.status === 'found').length;
+      const coverage = summary.coverage_percentage !== undefined ? summary.coverage_percentage.toFixed(0) : (total > 0 ? ((found / total) * 100).toFixed(0) : '0');
+      const mandatorySatisfied = summary.mandatory_satisfied !== undefined ? summary.mandatory_satisfied : (mandatoryTotal === 0 || mandatoryFound === mandatoryTotal);
+
+      // Counts in filter pills
+      document.getElementById('countAll').textContent = total;
+      document.getElementById('countFound').textContent = found;
+      document.getElementById('countPartial').textContent = partial;
+      document.getElementById('countMissing').textContent = missing;
+      document.getElementById('countMandatory').textContent = mandatoryTotal;
+
+      // Stats chips
+      statsEl.innerHTML = `
+        <div class="stat-chip stat-coverage">📊 Coverage: ${coverage}%</div>
+        <div class="stat-chip ${mandatorySatisfied ? 'stat-mandatory' : 'stat-mandatory-fail'}">
+          ${mandatorySatisfied ? '✅' : '🚨'} Mandatory: ${mandatoryFound}/${mandatoryTotal} Met
+        </div>
+        <div class="stat-chip">🎯 Total Reqs: ${total}</div>
+      `;
+
+      filterAndRenderParams();
+    }
+
+    function filterAndRenderParams() {
+      const container = document.getElementById('comparisonList');
+      container.innerHTML = '';
+
+      const filtered = allComparisonParams.filter(param => {
+        // Status filter
+        if (currentStatusFilter === 'mandatory') {
+          if (!param.is_mandatory) return false;
+        } else if (currentStatusFilter !== 'all' && param.status !== currentStatusFilter) {
+          return false;
+        }
+
+        // Category filter
+        if (currentCategoryFilter !== 'all') {
+          if (currentCategoryFilter === 'mandatory') {
+            if (!param.is_mandatory) return false;
+          } else if (param.category !== currentCategoryFilter) {
+            return false;
+          }
+        }
+
+        // Search query
+        if (currentSearchQuery) {
+          const q = currentSearchQuery.toLowerCase();
+          const reqMatch = (param.requirement_text || '').toLowerCase().includes(q);
+          const resumeMatch = (param.matched_resume_text || '').toLowerCase().includes(q);
+          const catMatch = (param.category || '').toLowerCase().includes(q);
+          if (!reqMatch && !resumeMatch && !catMatch) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="padding: 30px 20px;">
+            <div class="empty-state-icon">🔍</div>
+            <div class="empty-state-text">No comparison parameters match the current filters</div>
+            <div class="empty-state-hint">Try adjusting the filter pills, category, or search query</div>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(param => {
+        const card = document.createElement('div');
+        card.className = `param-card param-${param.status}`;
+
+        let statusText = 'FOUND ✅';
+        let statusClass = 'status-pill-found';
+        let barColor = 'var(--accent-green)';
+        if (param.status === 'partial') {
+          statusText = 'PARTIAL ⚠️';
+          statusClass = 'status-pill-partial';
+          barColor = 'var(--accent-amber)';
+        } else if (param.status === 'not_found') {
+          statusText = 'NOT FOUND ❌';
+          statusClass = 'status-pill-not_found';
+          barColor = 'var(--accent-rose)';
+        }
+
+        const jdLines = (param.source_jd_lines && param.source_jd_lines.length > 0)
+          ? `JD Lines: ${param.source_jd_lines.join(', ')}`
+          : '';
+
+        const resLines = (param.matched_resume_lines && param.matched_resume_lines.length > 0)
+          ? `Resume Lines: ${param.matched_resume_lines.join(', ')}`
+          : '';
+
+        const resumeContent = param.status !== 'not_found' && param.matched_resume_text
+          ? `<div class="param-resume-text">${param.matched_resume_text}</div>`
+          : `<div class="param-missing-text">❌ Requirement not detected in candidate's resume</div>`;
+
+        card.innerHTML = `
+          <div class="param-grid">
+            <!-- Left: JD Requirement -->
+            <div class="param-jd-side">
+              <div class="param-badges">
+                <span class="param-badge-category">${param.category || 'REQUIREMENT'}</span>
+                ${param.is_mandatory ? '<span class="param-badge-mandatory">🚨 MANDATORY</span>' : ''}
+                ${jdLines ? `<span class="param-line-tag">📍 ${jdLines}</span>` : ''}
+              </div>
+              <div class="param-text">${param.requirement_text}</div>
+            </div>
+
+            <!-- Center: Status & Confidence -->
+            <div class="param-status-col">
+              <span class="param-status-pill ${statusClass}">${statusText}</span>
+              <div class="param-score-num">${param.confidence_score.toFixed(1)}%</div>
+              <div class="param-conf-bar">
+                <div class="param-conf-fill" style="width:${param.confidence_score}%; background:${barColor}"></div>
+              </div>
+              <span style="font-size:10px; color:var(--text-muted)">sim: ${(param.similarity_score || 0).toFixed(3)}</span>
+            </div>
+
+            <!-- Right: Matched Resume Evidence -->
+            <div class="param-resume-side">
+              <div class="param-resume-header">
+                <span class="param-resume-section">📄 ${param.resume_section !== 'unknown' ? param.resume_section.toUpperCase() : 'RESUME EVIDENCE'}</span>
+                ${resLines ? `<span class="param-line-tag">📍 ${resLines}</span>` : ''}
+              </div>
+              ${resumeContent}
+              <div class="param-explanation">${param.explanation || ''}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function setupComparisonControls() {
+      // Filter pills
+      const pills = document.querySelectorAll('#statusFilterPills .filter-pill');
+      pills.forEach(pill => {
+        pill.addEventListener('click', () => {
+          pills.forEach(p => p.classList.remove('active'));
+          pill.classList.add('active');
+          currentStatusFilter = pill.dataset.filter;
+          filterAndRenderParams();
+        });
+      });
+
+      // Category select
+      const catSelect = document.getElementById('categorySelect');
+      catSelect.addEventListener('change', (e) => {
+        currentCategoryFilter = e.target.value;
+        filterAndRenderParams();
+      });
+
+      // Search input
+      const searchInput = document.getElementById('paramSearchInput');
+      searchInput.addEventListener('input', (e) => {
+        currentSearchQuery = e.target.value.trim();
+        filterAndRenderParams();
+      });
     }
 
     // ========== EVIDENCE TABS ==========
@@ -1099,6 +1674,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       setupDropZone('jdDropZone', 'jdFile', 'jdFileInfo', 'jdFileName', 'jdFileSize', 'jdRemove', (f) => { jdFile = f; });
       setupDropZone('resumeDropZone', 'resumeFile', 'resumeFileInfo', 'resumeFileName', 'resumeFileSize', 'resumeRemove', (f) => { resumeFile = f; });
+      setupComparisonControls();
       document.getElementById('matchBtn').addEventListener('click', runMatch);
       document.getElementById('downloadBtn').addEventListener('click', downloadReport);
     });

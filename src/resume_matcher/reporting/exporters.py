@@ -63,6 +63,8 @@ class JsonExporter(BaseExporter):
             "_report_id": report.report_id,
             "processing_details": report.processing_details,
             "candidate_score": report.candidate_score,
+            "comparison_summary": getattr(report, "comparison_summary", {}),
+            "comparison_parameters": getattr(report, "comparison_parameters", []),
             "skill_evidence": report.skill_evidence,
             "experience_evidence": report.experience_evidence,
             "education_evidence": report.education_evidence,

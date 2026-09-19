@@ -241,10 +241,10 @@ class EducationScorer:
 
 class SemanticMatchScorer:
     """
-    Scores overall semantic similarity across ALL sections.
+    Scores overall semantic similarity across requirement sections.
 
-    This is the broadest scorer — considers all JD-resume matches
-    regardless of section, capturing holistic fit.
+    Filters out non-requirement sections (ABOUT, CONTACT, OTHER) so that
+    company self-descriptions and contact details don't skew the score.
     """
 
     def score(
@@ -262,20 +262,32 @@ class SemanticMatchScorer:
                 explanation="No JD blocks to match against",
             )
 
-        # Consider all evidence with matches
+        # Filter out non-requirement JD blocks (ABOUT, CONTACT, OTHER)
+        # unless they are marked mandatory
+        requirement_jd = [
+            b for b in jd_blocks
+            if b.section not in (SectionType.ABOUT, SectionType.CONTACT, SectionType.OTHER)
+            or b.metadata.get("is_mandatory")
+        ]
+        target_blocks = requirement_jd if requirement_jd else jd_blocks
+        target_ids = {b.block_id for b in target_blocks}
+
+        # Consider evidence matching requirement blocks and excluding contact resume blocks
         matched_evidence = [
             e for e in evidence
-            if e.match_strength != MatchStrength.NONE
+            if e.jd_block_id in target_ids
+            and e.match_strength != MatchStrength.NONE
+            and e.resume_section != SectionType.CONTACT
         ]
 
-        # Best match per JD block (across all sections)
+        # Best match per JD block (across requirement sections)
         best_per_jd: dict[str, float] = {}
         for e in matched_evidence:
             current = best_per_jd.get(e.jd_block_id, 0.0)
             best_per_jd[e.jd_block_id] = max(current, e.similarity_score)
 
         match_quality = _safe_mean(list(best_per_jd.values())) if best_per_jd else 0.0
-        coverage = len(best_per_jd) / len(jd_blocks) if jd_blocks else 0.0
+        coverage = len(best_per_jd) / len(target_blocks) if target_blocks else 0.0
         raw_score = (match_quality * 0.5 + coverage * 0.5) * 100
         raw_score = min(max(raw_score, 0.0), 100.0)
 
@@ -287,6 +299,6 @@ class SemanticMatchScorer:
             explanation=(
                 f"Overall quality: {match_quality:.3f}, "
                 f"Overall coverage: {coverage:.1%}, "
-                f"Matched {len(best_per_jd)}/{len(jd_blocks)} total JD blocks"
+                f"Matched {len(best_per_jd)}/{len(target_blocks)} requirement blocks"
             ),
         )

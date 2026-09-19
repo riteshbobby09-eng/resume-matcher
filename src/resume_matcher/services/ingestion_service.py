@@ -124,18 +124,20 @@ class IngestionService:
         )
         meta.processing_stage = ProcessingStage.SEGMENTED
 
-        # 6. Build blocks
+        # 6. Detect section headings
+        detected_sections = self._section_detector.detect_sections(lines)
+        meta.processing_stage = ProcessingStage.SECTIONS_DETECTED
+        section_lines = {s.line_number for s in detected_sections}
+
+        # 7. Build blocks respecting section boundaries
         blocks = self._block_builder.build_blocks(
             sentences,
             document_id=meta.document_id,
             document_type=document_type,
             total_lines=len(lines),
+            section_break_lines=section_lines,
         )
         meta.processing_stage = ProcessingStage.BLOCKS_CREATED
-
-        # 7. Detect section headings
-        detected_sections = self._section_detector.detect_sections(lines)
-        meta.processing_stage = ProcessingStage.SECTIONS_DETECTED
 
         # 8. Assign sections from detections
         blocks = self._context_assigner.assign_sections_from_detection(

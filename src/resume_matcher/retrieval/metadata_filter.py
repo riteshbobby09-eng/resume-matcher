@@ -64,8 +64,10 @@ class MetadataFilter:
                 if result_doc_type and result_doc_type != required_doc_type.value:
                     continue
 
-            # Section-aware boosting
+            # Exclude contact section matches (contact info should not match job requirements)
             result_section = result.metadata.get("section", "")
+            if result_section == SectionType.CONTACT.value:
+                continue
             if (
                 query_section != SectionType.UNKNOWN
                 and result_section == query_section.value

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from resume_matcher.config import ScoringWeights
 from resume_matcher.domain.models import (
     CandidateScore,
+    ComparisonParameter,
     MandatoryRequirement,
     ScoreComponent,
 )
@@ -40,6 +41,7 @@ class FinalScorer:
         mandatory_requirements: list[MandatoryRequirement] | None = None,
         candidate_id: str = "",
         jd_id: str = "",
+        comparison_parameters: list[ComparisonParameter] | None = None,
     ) -> CandidateScore:
         """
         Calculate the final weighted score.
@@ -49,6 +51,7 @@ class FinalScorer:
             mandatory_requirements: Optional mandatory requirement results.
             candidate_id: Identifier for the candidate.
             jd_id: Identifier for the job description.
+            comparison_parameters: Optional comparison parameters evaluated.
 
         Returns:
             CandidateScore with final score and audit trail.
@@ -91,6 +94,7 @@ class FinalScorer:
             mandatory_requirements=mandatory,
             all_mandatory_met=all_met,
             review_flags=review_flags,
+            comparison_parameters=comparison_parameters or [],
         )
 
         logger.info(
