@@ -165,6 +165,16 @@
       border-style: solid;
       background: rgba(16, 185, 129, 0.04);
     }
+    .drop-zone input[type="file"] {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      z-index: 5;
+    }
 
     .drop-zone-icon {
       width: 48px; height: 48px; margin: 0 auto 12px;
@@ -966,7 +976,7 @@
             <div class="drop-zone-icon">☁️</div>
             <div class="drop-zone-text">Drag & drop or <strong>click to browse</strong></div>
             <div class="drop-zone-hint">Supported: .pdf, .docx — Max 25 MB</div>
-            <input type="file" id="jdFile" accept=".pdf,.docx" hidden>
+            <input type="file" id="jdFile" accept=".pdf,.docx">
           </div>
           <div class="file-info" id="jdFileInfo" style="display:none">
             <span class="file-info-icon">📄</span>
@@ -989,7 +999,7 @@
             <div class="drop-zone-icon">☁️</div>
             <div class="drop-zone-text">Drag & drop or <strong>click to browse</strong></div>
             <div class="drop-zone-hint">Supported: .pdf, .docx — Max 25 MB</div>
-            <input type="file" id="resumeFile" accept=".pdf,.docx" hidden>
+            <input type="file" id="resumeFile" accept=".pdf,.docx">
           </div>
           <div class="file-info" id="resumeFileInfo" style="display:none">
             <span class="file-info-icon">📄</span>
@@ -1183,21 +1193,38 @@
       const sizeEl = document.getElementById(fileSizeId);
       const removeBtn = document.getElementById(removeId);
 
-      zone.addEventListener('click', () => input.click());
-      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      // Visual drag-and-drop feedback
+      ['dragenter', 'dragover'].forEach(eventName => {
+        zone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
+        });
+      });
+
+      ['dragleave', 'dragend', 'drop'].forEach(eventName => {
+        zone.addEventListener(eventName, (e) => {
+          zone.classList.remove('drag-over');
+        });
+      });
+
+      // Handle file selection from input
+      input.addEventListener('change', () => {
+        if (input.files && input.files.length > 0) {
+          handleFile(input.files[0]);
+        }
+      });
+
+      // Also support manual drop if browser doesn't route to input
       zone.addEventListener('drop', (e) => {
         e.preventDefault();
         zone.classList.remove('drag-over');
-        const file = e.dataTransfer.files[0];
-        if (file) handleFile(file);
-      });
-
-      input.addEventListener('change', () => {
-        if (input.files[0]) handleFile(input.files[0]);
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          handleFile(e.dataTransfer.files[0]);
+        }
       });
 
       removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         e.stopPropagation();
         setter(null);
         input.value = '';
@@ -1207,13 +1234,16 @@
       });
 
       function handleFile(file) {
+        if (!file) return;
         const ext = file.name.split('.').pop().toLowerCase();
         if (!['pdf', 'docx'].includes(ext)) {
-          showToast('Only PDF and DOCX files are accepted', 'error');
+          showToast('Only PDF and DOCX files are accepted (.pdf, .docx)', 'error');
+          input.value = '';
           return;
         }
         if (file.size > 25 * 1024 * 1024) {
-          showToast('File size exceeds 25 MB limit', 'error');
+          showToast('File size exceeds 25 MB limit (25 MB)', 'error');
+          input.value = '';
           return;
         }
         setter(file);
@@ -1222,7 +1252,7 @@
         sizeEl.textContent = formatBytes(file.size);
         info.style.display = 'flex';
         updateMatchButton();
-        showToast(`${file.name} uploaded`, 'success');
+        showToast(`${file.name} ready for analysis`, 'success');
       }
     }
 
