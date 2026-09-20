@@ -48,7 +48,7 @@ class SkillScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.30,
+        weight: float = 0.25,
     ) -> ScoreComponent:
         """Calculate skill score (0–100)."""
         # Filter evidence for skill-relevant sections
@@ -122,7 +122,7 @@ class WorkExperienceScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.15,
+        weight: float = 0.25,
     ) -> ScoreComponent:
         """Calculate work experience score (0–100)."""
         relevant_jd = [
@@ -187,7 +187,7 @@ class EducationScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.15,
+        weight: float = 0.25,
     ) -> ScoreComponent:
         """Calculate education score (0–100)."""
         relevant_jd = [
@@ -239,40 +239,43 @@ class EducationScorer:
         )
 
 
-class SemanticMatchScorer:
+class ContentScorer:
     """
-    Scores overall semantic similarity across requirement sections.
+    Scores content match quality across sections not covered by Skill, Experience, and Education.
 
-    Filters out non-requirement sections (ABOUT, CONTACT, OTHER) so that
-    company self-descriptions and contact details don't skew the score.
+    Covers: Summary, Projects, Certifications, Achievements, Objective,
+    Responsibilities, Requirements, About, Other, Unknown, and Content.
     """
 
     def score(
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.40,
+        weight: float = 0.25,
     ) -> ScoreComponent:
-        """Calculate overall semantic match score (0–100)."""
+        """Calculate content match score (0–100)."""
         if not jd_blocks:
             return ScoreComponent(
-                name="semantic_match",
+                name="content_score",
                 raw_score=0.0,
                 weight=weight,
                 explanation="No JD blocks to match against",
             )
 
-        # Filter out non-requirement JD blocks (ABOUT, CONTACT, OTHER)
-        # unless they are marked mandatory
-        requirement_jd = [
+        # Target blocks outside of primary 3 (or all non-contact blocks)
+        target_blocks = [
             b for b in jd_blocks
-            if b.section not in (SectionType.ABOUT, SectionType.CONTACT, SectionType.OTHER)
-            or b.metadata.get("is_mandatory")
+            if b.section not in (SectionType.SKILLS, SectionType.EXPERIENCE, SectionType.EDUCATION, SectionType.CONTACT)
         ]
-        target_blocks = requirement_jd if requirement_jd else jd_blocks
+        # If no non-core blocks exist in JD, evaluate all requirement blocks
+        if not target_blocks:
+            target_blocks = [
+                b for b in jd_blocks
+                if b.section != SectionType.CONTACT
+            ]
         target_ids = {b.block_id for b in target_blocks}
 
-        # Consider evidence matching requirement blocks and excluding contact resume blocks
+        # Consider evidence matching target blocks and excluding contact resume blocks
         matched_evidence = [
             e for e in evidence
             if e.jd_block_id in target_ids
@@ -280,7 +283,7 @@ class SemanticMatchScorer:
             and e.resume_section != SectionType.CONTACT
         ]
 
-        # Best match per JD block (across requirement sections)
+        # Best match per JD block
         best_per_jd: dict[str, float] = {}
         for e in matched_evidence:
             current = best_per_jd.get(e.jd_block_id, 0.0)
@@ -292,13 +295,17 @@ class SemanticMatchScorer:
         raw_score = min(max(raw_score, 0.0), 100.0)
 
         return ScoreComponent(
-            name="semantic_match",
+            name="content_score",
             raw_score=round(raw_score, 2),
             weight=weight,
             evidence_count=len(matched_evidence),
             explanation=(
-                f"Overall quality: {match_quality:.3f}, "
-                f"Overall coverage: {coverage:.1%}, "
-                f"Matched {len(best_per_jd)}/{len(target_blocks)} requirement blocks"
+                f"Content quality: {match_quality:.3f}, "
+                f"Content coverage: {coverage:.1%}, "
+                f"Matched {len(best_per_jd)}/{len(target_blocks)} content blocks"
             ),
         )
+
+
+# Backward compatibility alias
+SemanticMatchScorer = ContentScorer

@@ -25,9 +25,9 @@ from resume_matcher.domain.models import IndexedLine
 logger = logging.getLogger(__name__)
 
 # Generic section aliases → canonical SectionType
-# These are NOT role-specific — they cover structural patterns across all domains
+# Comprehensive aliases covering all common phrasings found in resumes and JDs
 _SECTION_ALIASES: dict[str, SectionType] = {
-    # Skills variants
+    # ──────────────── SKILLS (30+ aliases) ────────────────
     "skills": SectionType.SKILLS,
     "technical skills": SectionType.SKILLS,
     "core skills": SectionType.SKILLS,
@@ -46,7 +46,32 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "technical expertise": SectionType.SKILLS,
     "programming languages": SectionType.SKILLS,
     "languages and tools": SectionType.SKILLS,
-    # Experience variants
+    "software skills": SectionType.SKILLS,
+    "it skills": SectionType.SKILLS,
+    "technical competencies": SectionType.SKILLS,
+    "computer skills": SectionType.SKILLS,
+    "professional skills": SectionType.SKILLS,
+    "relevant skills": SectionType.SKILLS,
+    "functional skills": SectionType.SKILLS,
+    "tools": SectionType.SKILLS,
+    "frameworks": SectionType.SKILLS,
+    "platforms": SectionType.SKILLS,
+    "databases": SectionType.SKILLS,
+    "devops tools": SectionType.SKILLS,
+    "cloud technologies": SectionType.SKILLS,
+    "data tools": SectionType.SKILLS,
+    "soft skills": SectionType.SKILLS,
+    "interpersonal skills": SectionType.SKILLS,
+    "technical knowledge": SectionType.SKILLS,
+    "domain expertise": SectionType.SKILLS,
+    "technology stack": SectionType.SKILLS,
+    "tech skills": SectionType.SKILLS,
+    "key technologies": SectionType.SKILLS,
+    "skills & abilities": SectionType.SKILLS,
+    "skills and abilities": SectionType.SKILLS,
+    "expertise": SectionType.SKILLS,
+    "areas of knowledge": SectionType.SKILLS,
+    # ──────────────── EXPERIENCE (25+ aliases) ────────────────
     "experience": SectionType.EXPERIENCE,
     "work experience": SectionType.EXPERIENCE,
     "professional experience": SectionType.EXPERIENCE,
@@ -57,7 +82,27 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "employment": SectionType.EXPERIENCE,
     "relevant experience": SectionType.EXPERIENCE,
     "industry experience": SectionType.EXPERIENCE,
-    # Education variants
+    "job history": SectionType.EXPERIENCE,
+    "positions held": SectionType.EXPERIENCE,
+    "professional history": SectionType.EXPERIENCE,
+    "working experience": SectionType.EXPERIENCE,
+    "career experience": SectionType.EXPERIENCE,
+    "internship experience": SectionType.EXPERIENCE,
+    "internships": SectionType.EXPERIENCE,
+    "past employment": SectionType.EXPERIENCE,
+    "previous roles": SectionType.EXPERIENCE,
+    "previous positions": SectionType.EXPERIENCE,
+    "roles": SectionType.EXPERIENCE,
+    "career profile": SectionType.EXPERIENCE,
+    "career path": SectionType.EXPERIENCE,
+    "work record": SectionType.EXPERIENCE,
+    "summary of experience": SectionType.EXPERIENCE,
+    "experience summary": SectionType.EXPERIENCE,
+    "employment record": SectionType.EXPERIENCE,
+    "job experience": SectionType.EXPERIENCE,
+    "work details": SectionType.EXPERIENCE,
+    "professional roles": SectionType.EXPERIENCE,
+    # ──────────────── EDUCATION (25+ aliases) ────────────────
     "education": SectionType.EDUCATION,
     "educational background": SectionType.EDUCATION,
     "academic background": SectionType.EDUCATION,
@@ -68,7 +113,25 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "academic details": SectionType.EDUCATION,
     "education & training": SectionType.EDUCATION,
     "education and training": SectionType.EDUCATION,
-    # Summary variants
+    "academic record": SectionType.EDUCATION,
+    "educational history": SectionType.EDUCATION,
+    "academic history": SectionType.EDUCATION,
+    "scholastic record": SectionType.EDUCATION,
+    "academic credentials": SectionType.EDUCATION,
+    "educational credentials": SectionType.EDUCATION,
+    "studies": SectionType.EDUCATION,
+    "academic profile": SectionType.EDUCATION,
+    "degree details": SectionType.EDUCATION,
+    "university education": SectionType.EDUCATION,
+    "college education": SectionType.EDUCATION,
+    "school education": SectionType.EDUCATION,
+    "coursework": SectionType.EDUCATION,
+    "relevant coursework": SectionType.EDUCATION,
+    "academic achievements": SectionType.EDUCATION,
+    "educational details": SectionType.EDUCATION,
+    "scholastic details": SectionType.EDUCATION,
+    "academic summary": SectionType.EDUCATION,
+    # ──────────────── SUMMARY ────────────────
     "summary": SectionType.SUMMARY,
     "professional summary": SectionType.SUMMARY,
     "executive summary": SectionType.SUMMARY,
@@ -77,17 +140,23 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "profile summary": SectionType.SUMMARY,
     "about me": SectionType.SUMMARY,
     "personal statement": SectionType.SUMMARY,
+    "overview": SectionType.SUMMARY,
+    "introduction": SectionType.SUMMARY,
+    # ──────────────── OBJECTIVE ────────────────
     "career objective": SectionType.OBJECTIVE,
     "objective": SectionType.OBJECTIVE,
     "career goal": SectionType.OBJECTIVE,
-    # Projects variants
+    "professional objective": SectionType.OBJECTIVE,
+    # ──────────────── PROJECTS ────────────────
     "projects": SectionType.PROJECTS,
     "project experience": SectionType.PROJECTS,
     "key projects": SectionType.PROJECTS,
     "personal projects": SectionType.PROJECTS,
     "academic projects": SectionType.PROJECTS,
     "notable projects": SectionType.PROJECTS,
-    # Certifications variants
+    "side projects": SectionType.PROJECTS,
+    "major projects": SectionType.PROJECTS,
+    # ──────────────── CERTIFICATIONS ────────────────
     "certifications": SectionType.CERTIFICATIONS,
     "certificates": SectionType.CERTIFICATIONS,
     "professional certifications": SectionType.CERTIFICATIONS,
@@ -96,7 +165,9 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "training & certifications": SectionType.CERTIFICATIONS,
     "training and certifications": SectionType.CERTIFICATIONS,
     "certification": SectionType.CERTIFICATIONS,
-    # Achievements variants
+    "professional development": SectionType.CERTIFICATIONS,
+    "training": SectionType.CERTIFICATIONS,
+    # ──────────────── ACHIEVEMENTS ────────────────
     "achievements": SectionType.ACHIEVEMENTS,
     "accomplishments": SectionType.ACHIEVEMENTS,
     "awards": SectionType.ACHIEVEMENTS,
@@ -104,20 +175,22 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "awards and honors": SectionType.ACHIEVEMENTS,
     "honors": SectionType.ACHIEVEMENTS,
     "recognition": SectionType.ACHIEVEMENTS,
-    # Contact variants
+    "key achievements": SectionType.ACHIEVEMENTS,
+    # ──────────────── CONTACT ────────────────
     "contact": SectionType.CONTACT,
     "contact information": SectionType.CONTACT,
     "contact details": SectionType.CONTACT,
     "personal information": SectionType.CONTACT,
     "personal details": SectionType.CONTACT,
-    # Responsibilities (common in JDs)
+    # ──────────────── RESPONSIBILITIES (JDs) ────────────────
     "responsibilities": SectionType.RESPONSIBILITIES,
     "key responsibilities": SectionType.RESPONSIBILITIES,
     "roles and responsibilities": SectionType.RESPONSIBILITIES,
     "roles & responsibilities": SectionType.RESPONSIBILITIES,
     "job responsibilities": SectionType.RESPONSIBILITIES,
     "duties": SectionType.RESPONSIBILITIES,
-    # Requirements (common in JDs)
+    "duties and responsibilities": SectionType.RESPONSIBILITIES,
+    # ──────────────── REQUIREMENTS (JDs) ────────────────
     "requirements": SectionType.REQUIREMENTS,
     "job requirements": SectionType.REQUIREMENTS,
     "minimum requirements": SectionType.REQUIREMENTS,
@@ -127,7 +200,9 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "must have": SectionType.REQUIREMENTS,
     "nice to have": SectionType.REQUIREMENTS,
     "eligibility": SectionType.REQUIREMENTS,
-    # About (common in JDs)
+    "minimum qualifications": SectionType.REQUIREMENTS,
+    "basic qualifications": SectionType.REQUIREMENTS,
+    # ──────────────── ABOUT (JDs) ────────────────
     "about us": SectionType.ABOUT,
     "about the company": SectionType.ABOUT,
     "company overview": SectionType.ABOUT,
@@ -136,7 +211,7 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "role overview": SectionType.ABOUT,
     "position overview": SectionType.ABOUT,
     "job overview": SectionType.ABOUT,
-    # Other
+    # ──────────────── OTHER ────────────────
     "references": SectionType.OTHER,
     "hobbies": SectionType.OTHER,
     "interests": SectionType.OTHER,
@@ -147,6 +222,9 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "publications": SectionType.OTHER,
     "languages": SectionType.OTHER,
     "additional information": SectionType.OTHER,
+    "extra curricular activities": SectionType.OTHER,
+    "activities": SectionType.OTHER,
+    "memberships": SectionType.OTHER,
 }
 
 
@@ -175,6 +253,11 @@ class SectionDetector:
 
     # Maximum length for a line to be considered a heading
     MAX_HEADING_LENGTH = 80
+
+    def detect_heading(self, text: str) -> SectionType | None:
+        """Convenience method to detect section type from a heading string."""
+        detected = self._try_detect(text, 1)
+        return detected.section_type if detected else None
 
     def detect_sections(self, lines: list[IndexedLine]) -> list[DetectedSection]:
         """

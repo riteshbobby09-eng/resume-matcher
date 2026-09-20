@@ -15,11 +15,11 @@ class TestConfig:
     def test_scoring_weights(self):
         config = load_config()
         w = config.scoring.weights
-        assert w.skill == 0.30
-        assert w.work_experience == 0.15
-        assert w.education == 0.15
-        assert w.semantic_match == 0.40
-        total = w.skill + w.work_experience + w.education + w.semantic_match
+        assert w.skill == 0.25
+        assert w.work_experience == 0.25
+        assert w.education == 0.25
+        assert w.content_score == 0.25
+        total = w.skill + w.work_experience + w.education + w.content_score
         assert abs(total - 1.0) < 1e-6
 
     def test_invalid_weights_raise(self):

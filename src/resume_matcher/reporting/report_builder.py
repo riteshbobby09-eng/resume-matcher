@@ -45,7 +45,8 @@ class RecruiterReport:
         self.skill_evidence: dict = {}
         self.experience_evidence: dict = {}
         self.education_evidence: dict = {}
-        self.semantic_evidence: dict = {}
+        self.content_evidence: dict = {}
+        self.semantic_evidence: dict = {}  # alias for backward compat
         self.strongest_matches: list[dict] = []
         self.weakest_matches: list[dict] = []
         self.mandatory_requirements: list[dict] = []
@@ -132,9 +133,18 @@ class ReportBuilder:
         report.education_evidence = self._build_evidence_group(
             "education", candidate_score, evidence, jd_doc.blocks
         )
-        report.semantic_evidence = self._build_evidence_group(
-            "semantic_match", candidate_score, evidence, jd_doc.blocks
+        content_ev = self._build_evidence_group(
+            "content_score", candidate_score, evidence, jd_doc.blocks
         )
+        if not content_ev.get("evidence"):
+            # Try semantic_match for backward compat
+            fallback_ev = self._build_evidence_group(
+                "semantic_match", candidate_score, evidence, jd_doc.blocks
+            )
+            if fallback_ev.get("evidence"):
+                content_ev = fallback_ev
+        report.content_evidence = content_ev
+        report.semantic_evidence = content_ev
 
         # Strongest and weakest matches
         matched = [e for e in evidence if e.match_strength != MatchStrength.NONE]
@@ -242,6 +252,12 @@ class ReportBuilder:
             "skill": {SectionType.SKILLS, SectionType.PROJECTS, SectionType.CERTIFICATIONS, SectionType.REQUIREMENTS},
             "work_experience": {SectionType.EXPERIENCE, SectionType.PROJECTS, SectionType.ACHIEVEMENTS, SectionType.RESPONSIBILITIES},
             "education": {SectionType.EDUCATION, SectionType.CERTIFICATIONS},
+            "content_score": {
+                SectionType.CONTENT, SectionType.SUMMARY, SectionType.OBJECTIVE,
+                SectionType.PROJECTS, SectionType.CERTIFICATIONS, SectionType.ACHIEVEMENTS,
+                SectionType.RESPONSIBILITIES, SectionType.REQUIREMENTS, SectionType.ABOUT,
+                SectionType.OTHER, SectionType.UNKNOWN,
+            },
             "semantic_match": set(SectionType),
         }
         relevant_sections = section_map.get(component_name, set(SectionType))
@@ -249,7 +265,7 @@ class ReportBuilder:
             b.block_id for b in jd_blocks if b.section in relevant_sections
         }
 
-        if component_name == "semantic_match":
+        if component_name in ("semantic_match", "content_score") and not relevant_jd_ids:
             relevant_jd_ids = {b.block_id for b in jd_blocks}
 
         component_evidence = [

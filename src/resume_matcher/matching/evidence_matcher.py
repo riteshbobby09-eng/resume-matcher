@@ -129,7 +129,13 @@ class EvidenceMatcher:
             for result in filtered:
                 meta = result.metadata
                 score = result.similarity_score
-                strength = self._classify_strength(score)
+
+                # ── 30% cosine floor: below threshold → 0.0 ──
+                if score < self._thresholds.cosine_floor:
+                    score = 0.0
+                    strength = MatchStrength.NONE
+                else:
+                    strength = self._classify_strength(score)
 
                 evidence = MatchEvidence(
                     jd_block_id=jd_block.block_id,

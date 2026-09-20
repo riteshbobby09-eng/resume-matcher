@@ -1,21 +1,14 @@
 """
-Rule-based sentence splitter for Resume Matcher.
+Sentence splitter for Resume Matcher.
 
-Splits text into sentences using regex rules — NO spaCy or ML models.
+Splits text into sentences using SpaCy for linguistically-aware segmentation.
+Falls back to rule-based splitting if SpaCy is unavailable.
 
-Key design:
-- Split on sentence-ending punctuation (. ! ?) followed by whitespace + uppercase
-- Protect abbreviations, technical terms, decimal numbers, URLs, and emails
-- Handle bullet points and list items as separate sentences
-- Preserve source line number references
-
-Protected patterns (will NOT trigger a split):
-- Abbreviations: Mr., Mrs., Dr., Sr., Jr., Inc., Ltd., Corp., etc.
-- Technical terms: 3.5 years, v2.1, GPA 3.8
-- Decimal numbers: 3.5, 2.0, 0.75
-- URLs and email addresses
-- Ellipsis: ...
-- e.g., i.e., vs., etc.
+Key features:
+- SpaCy `en_core_web_sm` for sentence boundary detection
+- Bullet points and list items → standalone sentences
+- Section headings → standalone sentences
+- Protected patterns: abbreviations, technical terms, decimal numbers, URLs, emails
 """
 
 from __future__ import annotations
@@ -27,7 +20,29 @@ from resume_matcher.domain.models import IndexedLine, Sentence
 
 logger = logging.getLogger(__name__)
 
-# Abbreviations that end with a period but don't end sentences
+# ── SpaCy singleton ──
+_nlp_cache = {}
+
+
+def _get_spacy_nlp():
+    """Load or retrieve cached SpaCy model (singleton)."""
+    if "nlp" in _nlp_cache:
+        return _nlp_cache["nlp"]
+    try:
+        import spacy
+        nlp = spacy.load("en_core_web_sm")
+        # Disable components we don't need for sentence splitting
+        nlp.select_pipes(enable=["tok2vec", "parser", "senter"])
+        _nlp_cache["nlp"] = nlp
+        logger.info("SpaCy model loaded: en_core_web_sm")
+        return nlp
+    except Exception as e:
+        logger.warning("SpaCy not available, using rule-based fallback: %s", e)
+        _nlp_cache["nlp"] = None
+        return None
+
+
+# ── Rule-based fallback patterns ──
 _ABBREVIATIONS = {
     "mr", "mrs", "ms", "dr", "sr", "jr", "prof", "dept",
     "inc", "ltd", "corp", "assoc", "mgr", "engr", "pvt",
@@ -40,41 +55,52 @@ _ABBREVIATIONS = {
     "fig", "eq", "ch", "sec", "pt",
 }
 
-# Pattern that matches "e.g.", "i.e.", "vs.", "etc."
 _SPECIAL_ABBREV_PATTERN = re.compile(
     r"\b(?:e\.g|i\.e|vs|etc|approx|est|al)\.\s*",
     re.IGNORECASE,
 )
-
-# Pattern for decimal numbers: 3.5, 2.0, 0.75
 _DECIMAL_PATTERN = re.compile(r"\d+\.\d+")
-
-# Pattern for URLs
 _URL_PATTERN = re.compile(r"https?://[^\s]+")
-
-# Pattern for email addresses
 _EMAIL_PATTERN = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
-
-# Pattern for tech names with dots
 _TECH_DOT_PATTERN = re.compile(
     r"\b(?:node|vue|react|next|express|d3|three|angular|jquery)\.js\b",
     re.IGNORECASE,
 )
-
-# Pattern for .NET
 _DOTNET_PATTERN = re.compile(r"\.NET\b")
-
-# Ellipsis
 _ELLIPSIS_PATTERN = re.compile(r"\.{2,}")
 
 
 class SentenceSplitter:
     """
-    Rule-based sentence splitter.
+    Sentence splitter with SpaCy and rule-based fallback.
 
-    Splits cleaned, normalized text lines into individual sentences
-    while preserving technical expressions and abbreviations.
+    Uses SpaCy's en_core_web_sm for linguistically-aware sentence
+    boundary detection, with fallback to regex rules if SpaCy is unavailable.
     """
+
+    def __init__(self, use_spacy: bool = True) -> None:
+        self._use_spacy = use_spacy
+        if use_spacy:
+            self._nlp = _get_spacy_nlp()
+        else:
+            self._nlp = None
+
+    def split_text(
+        self,
+        text: str,
+        document_id: str = "",
+    ) -> list[Sentence]:
+        """
+        Split a raw text string into Sentences.
+
+        Convenience method that wraps split_lines.
+        """
+        raw_lines = text.splitlines() or [text]
+        indexed = [
+            IndexedLine(global_line_number=i + 1, text=l, is_empty=not l.strip())
+            for i, l in enumerate(raw_lines)
+        ]
+        return self.split_lines(indexed, document_id)
 
     def split_lines(
         self,
@@ -173,18 +199,62 @@ class SentenceSplitter:
         document_id: str,
     ) -> list[Sentence]:
         """
-        Split a text block into sentences using rule-based patterns.
-
-        Uses placeholder protection for abbreviations and technical terms.
+        Split a text block into sentences using SpaCy or rule-based fallback.
         """
         if not text.strip():
             return []
 
+        # Use SpaCy if available
+        if self._nlp is not None:
+            return self._split_with_spacy(text, source_lines, document_id)
+
+        # Fallback: rule-based splitting
+        return self._split_with_rules(text, source_lines, document_id)
+
+    def _split_with_spacy(
+        self,
+        text: str,
+        source_lines: list[int],
+        document_id: str,
+    ) -> list[Sentence]:
+        """Split using SpaCy's sentence boundary detection."""
+        doc = self._nlp(text)
+        sentences: list[Sentence] = []
+
+        for sent in doc.sents:
+            sent_text = sent.text.strip()
+            if sent_text:
+                sentences.append(
+                    Sentence(
+                        text=sent_text,
+                        source_line_numbers=list(source_lines),
+                        document_id=document_id,
+                    )
+                )
+
+        return sentences if sentences else [
+            Sentence(
+                text=text.strip(),
+                source_line_numbers=list(source_lines),
+                document_id=document_id,
+            )
+        ]
+
+    def _split_with_rules(
+        self,
+        text: str,
+        source_lines: list[int],
+        document_id: str,
+    ) -> list[Sentence]:
+        """
+        Fallback rule-based sentence splitting.
+
+        Uses placeholder protection for abbreviations and technical terms.
+        """
         # Protect patterns from incorrect splitting
         protected_text, placeholders = self._protect_patterns(text)
 
-        # Split on sentence boundaries:
-        # Period/exclamation/question followed by one+ whitespace and an uppercase letter
+        # Split on sentence boundaries
         parts = re.split(r"(?<=[.!?])\s+(?=[A-Z])", protected_text)
 
         # Restore placeholders and create sentences
@@ -210,11 +280,7 @@ class SentenceSplitter:
         ]
 
     def _protect_patterns(self, text: str) -> tuple[str, dict[str, str]]:
-        """
-        Replace patterns that shouldn't trigger sentence splits with placeholders.
-
-        Returns (modified_text, {placeholder: original}) mapping.
-        """
+        """Replace patterns that shouldn't trigger sentence splits with placeholders."""
         placeholders: dict[str, str] = {}
         counter = 0
 
@@ -225,7 +291,6 @@ class SentenceSplitter:
             counter += 1
             return key
 
-        # Order matters: more specific patterns first
         text = _URL_PATTERN.sub(_replace, text)
         text = _EMAIL_PATTERN.sub(_replace, text)
         text = _TECH_DOT_PATTERN.sub(_replace, text)
@@ -234,12 +299,8 @@ class SentenceSplitter:
         text = _SPECIAL_ABBREV_PATTERN.sub(_replace, text)
         text = _DECIMAL_PATTERN.sub(_replace, text)
 
-        # Protect known abbreviations: "Dr. " → placeholder
         for abbrev in _ABBREVIATIONS:
-            pattern = re.compile(
-                rf"\b{re.escape(abbrev)}\.\s",
-                re.IGNORECASE,
-            )
+            pattern = re.compile(rf"\b{re.escape(abbrev)}\.\s", re.IGNORECASE)
             text = pattern.sub(_replace, text)
 
         return text, placeholders
@@ -261,7 +322,6 @@ class SentenceSplitter:
         """
         Check if a line is likely a section heading.
 
-        Headings break the paragraph buffer to ensure proper block formation.
         Detects:
         - ALL CAPS short lines (e.g. "WORK EXPERIENCE", "SKILLS")
         - Colon-terminated short lines (e.g. "Skills:", "Education:")

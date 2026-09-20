@@ -14,8 +14,8 @@ from resume_matcher.embeddings.bge_embedder import BgeEmbedder
 from resume_matcher.matching.evidence_matcher import EvidenceMatcher
 from resume_matcher.matching.mandatory_handler import MandatoryHandler
 from resume_matcher.scoring.component_scorers import (
+    ContentScorer,
     EducationScorer,
-    SemanticMatchScorer,
     SkillScorer,
     WorkExperienceScorer,
 )
@@ -42,7 +42,7 @@ class MatchingService:
         self._skill_scorer = SkillScorer()
         self._exp_scorer = WorkExperienceScorer()
         self._edu_scorer = EducationScorer()
-        self._semantic_scorer = SemanticMatchScorer()
+        self._content_scorer = ContentScorer()
         self._final_scorer = FinalScorer(config.scoring.weights)
 
     def match_and_score(
@@ -90,11 +90,12 @@ class MatchingService:
         skill_score = self._skill_scorer.score(evidence, jd_blocks, weights.skill)
         exp_score = self._exp_scorer.score(evidence, jd_blocks, weights.work_experience)
         edu_score = self._edu_scorer.score(evidence, jd_blocks, weights.education)
-        semantic_score = self._semantic_scorer.score(
-            evidence, jd_blocks, weights.semantic_match
+        content_weight = getattr(weights, "content_score", getattr(weights, "semantic_match", 0.25))
+        content_score = self._content_scorer.score(
+            evidence, jd_blocks, content_weight
         )
 
-        components = [skill_score, exp_score, edu_score, semantic_score]
+        components = [skill_score, exp_score, edu_score, content_score]
 
         # 6. Final score
         candidate_score = self._final_scorer.calculate(

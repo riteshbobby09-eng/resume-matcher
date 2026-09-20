@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Content signal patterns (NOT role-specific — structural patterns only)
 _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
-    # Experience signals: date ranges, company-like patterns
+    # Experience signals: date ranges, company-like patterns, action verbs, job titles
     (
         re.compile(
             r"(?:\b\d{4}\s*[-–—]\s*(?:\d{4}|present|current|till date)\b)",
@@ -34,18 +34,39 @@ _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
     ),
     (
         re.compile(
-            r"\b(?:worked at|worked with|employed at|joined|role|position|designation)\b",
+            r"\b(?:worked at|worked with|employed at|joined|role|position|designation|"
+            r"responsibilities|duties|client|employer|tenure)\b",
             re.IGNORECASE,
         ),
         SectionType.EXPERIENCE,
         "Contains employment-related keywords",
     ),
-    # Education signals: degree names, university patterns
+    (
+        re.compile(
+            r"\b(?:software engineer|developer|architect|team lead|tech lead|engineering manager|"
+            r"product manager|data scientist|data engineer|devops engineer|consultant|"
+            r"analyst|specialist|administrator|intern|associate|director|vp|vice president)\b",
+            re.IGNORECASE,
+        ),
+        SectionType.EXPERIENCE,
+        "Contains job title patterns",
+    ),
+    (
+        re.compile(
+            r"^\s*[-*•]?\s*(?:managed|spearheaded|architected|developed|implemented|designed|"
+            r"coordinated|collaborated|delivered|engineered|optimized|resolved|maintained|"
+            r"deployed|monitored|increased|reduced|achieved|drove|trained|mentored|led)\b",
+            re.IGNORECASE | re.MULTILINE,
+        ),
+        SectionType.EXPERIENCE,
+        "Starts with action verb typical of experience bullets",
+    ),
+    # Education signals: degree names, university patterns, majors, graduation years
     (
         re.compile(
             r"\b(?:bachelor|master|ph\.?d|diploma|degree|b\.?tech|m\.?tech|"
             r"b\.?sc|m\.?sc|b\.?e|m\.?e|mba|bba|bca|mca|b\.?a|m\.?a|"
-            r"b\.?com|m\.?com|associate|doctorate)\b",
+            r"b\.?com|m\.?com|associate degree|doctorate|post graduate|undergraduate)\b",
             re.IGNORECASE,
         ),
         SectionType.EDUCATION,
@@ -54,17 +75,38 @@ _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
     (
         re.compile(
             r"\b(?:university|college|institute|school|academy|campus|"
-            r"cgpa|gpa|percentage|grade|marks)\b",
+            r"cgpa|gpa|percentage|grade|marks|graduated|class of|batch of|passout)\b",
             re.IGNORECASE,
         ),
         SectionType.EDUCATION,
         "Contains educational institution or grading keywords",
     ),
-    # Skills signals: comma-separated technical terms, pipe-separated lists
     (
-        re.compile(r"(?:[\w\+\#\.]+\s*[,|]\s*){3,}"),  # 3+ comma/pipe-separated items
+        re.compile(
+            r"\b(?:computer science|information technology|electronics|electrical|mechanical|"
+            r"civil engineering|data science|artificial intelligence|business administration|"
+            r"mathematics|statistics|physics)\b",
+            re.IGNORECASE,
+        ),
+        SectionType.EDUCATION,
+        "Contains academic major or field of study",
+    ),
+    # Skills signals: comma-separated technical terms, pipe-separated lists, tech keywords
+    (
+        re.compile(r"(?:[\w\+\#\.]+\s*[,|/]\s*){3,}"),  # 3+ comma/pipe/slash-separated items
         SectionType.SKILLS,
         "Contains comma/pipe-separated list (likely skills)",
+    ),
+    (
+        re.compile(
+            r"\b(?:python|java|c\+\+|javascript|typescript|golang|rust|ruby|php|swift|kotlin|"
+            r"react|angular|vue|next\.?js|node\.?js|express|django|fastapi|flask|spring boot|"
+            r"docker|kubernetes|aws|azure|gcp|terraform|git|linux|sql|postgresql|mysql|mongodb|"
+            r"redis|elasticsearch|kafka|graphql|rest api|ci/cd|html|css|tailwind)\b",
+            re.IGNORECASE,
+        ),
+        SectionType.SKILLS,
+        "Contains specific technical skill keywords",
     ),
     # Contact signals: email, phone, address patterns
     (
@@ -77,12 +119,17 @@ _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
         SectionType.CONTACT,
         "Contains phone number pattern",
     ),
+    (
+        re.compile(r"\b(?:linkedin\.com/in/|github\.com/|[a-z0-9]+\.github\.io)\b", re.IGNORECASE),
+        SectionType.CONTACT,
+        "Contains profile URL pattern",
+    ),
     # Certification signals
     (
         re.compile(
             r"\b(?:certified|certification|certificate|credential|license|"
             r"aws certified|google certified|microsoft certified|pmp|"
-            r"scrum master|itil)\b",
+            r"scrum master|itil|cka|ckad|cissp)\b",
             re.IGNORECASE,
         ),
         SectionType.CERTIFICATIONS,
@@ -92,7 +139,7 @@ _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
     (
         re.compile(
             r"\b(?:project|built|developed|implemented|created|designed|"
-            r"github|repository|demo|prototype)\b",
+            r"github|repository|demo|prototype|tech stack used)\b",
             re.IGNORECASE,
         ),
         SectionType.PROJECTS,
@@ -102,11 +149,21 @@ _CONTENT_SIGNALS: list[tuple[re.Pattern[str], SectionType, str]] = [
     (
         re.compile(
             r"\b(?:award|recognition|achievement|honor|prize|medal|"
-            r"top performer|outstanding|excellence)\b",
+            r"top performer|outstanding|excellence|hackathon winner|rank)\b",
             re.IGNORECASE,
         ),
         SectionType.ACHIEVEMENTS,
         "Contains achievement-related keywords",
+    ),
+    # Summary signals
+    (
+        re.compile(
+            r"\b(?:experienced professional|results-driven|proven track record|"
+            r"seeking an opportunity|dynamic and motivated|passionate engineer)\b",
+            re.IGNORECASE,
+        ),
+        SectionType.SUMMARY,
+        "Contains summary / objective phrasing",
     ),
 ]
 
@@ -121,6 +178,7 @@ _POSITION_PRIORS: dict[SectionType, tuple[float, float]] = {
     SectionType.PROJECTS: (0.3, 0.9),
     SectionType.CERTIFICATIONS: (0.6, 1.0),
     SectionType.ACHIEVEMENTS: (0.5, 1.0),
+    SectionType.CONTENT: (0.0, 1.0),
 }
 
 
@@ -150,6 +208,11 @@ class SectionInferencer:
         """
         for i, block in enumerate(blocks):
             if block.section != SectionType.UNKNOWN:
+                # Even if section is known, check for secondary section signals (e.g. skills in experience)
+                for pattern, sec_type, _ in _CONTENT_SIGNALS:
+                    if sec_type != block.section and pattern.search(block.text):
+                        block.metadata["secondary_section"] = sec_type.value
+                        break
                 continue  # Already has a detected section
 
             inference = self._infer_block_section(block, blocks, i)

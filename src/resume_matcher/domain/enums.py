@@ -47,8 +47,18 @@ class SectionType(str, Enum):
     RESPONSIBILITIES = "responsibilities"
     REQUIREMENTS = "requirements"
     ABOUT = "about"
+    CONTENT = "content"  # Catch-all for final report scoring
     OTHER = "other"
     UNKNOWN = "unknown"
+
+
+# The 4 sections shown in the final recruiter report
+REPORT_SECTIONS = {
+    SectionType.SKILLS,
+    SectionType.EDUCATION,
+    SectionType.EXPERIENCE,
+    SectionType.CONTENT,
+}
 
 
 @unique

@@ -61,18 +61,25 @@ class RetrievalConfig:
 class ScoringWeights:
     """Scoring component weights — must sum to 1.0."""
 
-    skill: float = 0.30
-    work_experience: float = 0.15
-    education: float = 0.15
-    semantic_match: float = 0.40
+    skill: float = 0.25
+    work_experience: float = 0.25
+    education: float = 0.25
+    content_score: float = 0.25
+    semantic_match: float | None = None
 
     def __post_init__(self) -> None:
-        total = self.skill + self.work_experience + self.education + self.semantic_match
+        # Backward compatibility: if semantic_match provided, use it for content_score
+        if self.semantic_match is not None and self.content_score == 0.25 and self.semantic_match != 0.25:
+            object.__setattr__(self, "content_score", self.semantic_match)
+        elif self.semantic_match is None:
+            object.__setattr__(self, "semantic_match", self.content_score)
+
+        total = self.skill + self.work_experience + self.education + self.content_score
         if abs(total - 1.0) > 1e-6:
             raise ValueError(
                 f"Scoring weights must sum to 1.0, got {total:.6f} "
                 f"(skill={self.skill}, work_experience={self.work_experience}, "
-                f"education={self.education}, semantic_match={self.semantic_match})"
+                f"education={self.education}, content_score={self.content_score})"
             )
 
 
@@ -80,9 +87,10 @@ class ScoringWeights:
 class ScoringThresholds:
     """Thresholds for categorizing match strength."""
 
-    strong_match: float = 0.75
-    moderate_match: float = 0.55
-    weak_match: float = 0.35
+    strong_match: float = 0.70
+    moderate_match: float = 0.50
+    weak_match: float = 0.30
+    cosine_floor: float = 0.30  # Hard floor: below this → 0.0 score
 
 
 @dataclass(frozen=True)
@@ -97,9 +105,11 @@ class ScoringConfig:
 class SegmentationConfig:
     """Block building and sentence segmentation settings."""
 
-    max_sentences_per_block: int = 5
+    max_words_per_chunk: int = 40
     min_block_length_chars: int = 20
     merge_short_blocks: bool = True
+    use_spacy: bool = True
+    max_sentences_per_block: int | None = None
 
 
 @dataclass(frozen=True)

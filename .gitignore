@@ -63,3 +63,4 @@ output/
 exports/
 reports/
 .vercel
+.env*

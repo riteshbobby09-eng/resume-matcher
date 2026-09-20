@@ -29,7 +29,7 @@ class FinalScorer:
     """
     Computes the final weighted score from component scores.
 
-    Formula: Final = Skill×0.30 + WorkExp×0.15 + Education×0.15 + Semantic×0.40
+    Formula: Final = Skill×0.25 + WorkExp×0.25 + Education×0.25 + Content×0.25
     """
 
     def __init__(self, weights: ScoringWeights) -> None:
@@ -97,14 +97,18 @@ class FinalScorer:
             comparison_parameters=comparison_parameters or [],
         )
 
+        content_val = self._get_component_score(components, "content_score")
+        if content_val == 0.0:
+            content_val = self._get_component_score(components, "semantic_match")
+
         logger.info(
-            "Final score: %.2f (skill=%.1f, exp=%.1f, edu=%.1f, semantic=%.1f) "
+            "Final score: %.2f (skill=%.1f, exp=%.1f, edu=%.1f, content=%.1f) "
             "mandatory=%s",
             final_score,
             self._get_component_score(components, "skill"),
             self._get_component_score(components, "work_experience"),
             self._get_component_score(components, "education"),
-            self._get_component_score(components, "semantic_match"),
+            content_val,
             "all met" if all_met else f"{sum(1 for r in mandatory if r.is_met)}/{len(mandatory)} met",
         )
 
@@ -112,14 +116,18 @@ class FinalScorer:
 
     def _validate_components(self, components: list[ScoreComponent]) -> None:
         """Validate that all required components are present with correct weights."""
-        expected_names = {"skill", "work_experience", "education", "semantic_match"}
         actual_names = {c.name for c in components}
+        expected_sets = [
+            {"skill", "work_experience", "education", "content_score"},
+            {"skill", "work_experience", "education", "semantic_match"},
+        ]
 
-        missing = expected_names - actual_names
-        if missing:
+        if not any(expected.issubset(actual_names) for expected in expected_sets):
+            expected_primary = {"skill", "work_experience", "education", "content_score"}
+            missing = expected_primary - actual_names
             raise ScoringError(
                 f"Missing score components: {missing}",
-                details={"expected": sorted(expected_names), "actual": sorted(actual_names)},
+                details={"expected": sorted(expected_primary), "actual": sorted(actual_names)},
             )
 
         # Validate individual component scores

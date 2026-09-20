@@ -28,18 +28,20 @@ retrieval:
 # --- Scoring Weights (must sum to 1.0) ---
 scoring:
   weights:
-    skill: 0.30
-    work_experience: 0.15
-    education: 0.15
-    semantic_match: 0.40
+    skill: 0.25
+    work_experience: 0.25
+    education: 0.25
+    content_score: 0.25
   thresholds:
-    strong_match: 0.75
-    moderate_match: 0.55
-    weak_match: 0.35
+    strong_match: 0.70
+    moderate_match: 0.50
+    weak_match: 0.30
+    cosine_floor: 0.30
 
 # --- Block Building ---
 segmentation:
-  max_sentences_per_block: 5
+  max_words_per_chunk: 40
+  use_spacy: true
   min_block_length_chars: 20
   merge_short_blocks: true
 

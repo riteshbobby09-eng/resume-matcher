@@ -1696,30 +1696,30 @@
           {
             "name": "skill",
             "raw_score": 89.2,
-            "weight": 0.40,
-            "weighted_contribution": 35.68,
+            "weight": 0.25,
+            "weighted_contribution": 22.30,
             "explanation": "Matched 16 of 18 technical skills (Python, PyTorch, Transformers, Docker, FastAPI)"
           },
           {
             "name": "work_experience",
             "raw_score": 85.0,
-            "weight": 0.30,
-            "weighted_contribution": 25.50,
+            "weight": 0.25,
+            "weighted_contribution": 21.25,
             "explanation": "6+ years in ML/AI engineering roles, exceeding the 5-year requirement"
           },
           {
             "name": "education",
             "raw_score": 92.0,
-            "weight": 0.15,
-            "weighted_contribution": 13.80,
+            "weight": 0.25,
+            "weighted_contribution": 23.00,
             "explanation": "M.S. in Computer Science (Specialization: Machine Learning)"
           },
           {
-            "name": "semantic_match",
+            "name": "content_score",
             "raw_score": 84.8,
-            "weight": 0.15,
-            "weighted_contribution": 12.72,
-            "explanation": "High contextual alignment across LLM fine-tuning, retrieval-augmented systems, and distributed training"
+            "weight": 0.25,
+            "weighted_contribution": 21.20,
+            "explanation": "High contextual alignment across summary, certifications, projects, and domain achievements"
           }
         ]
       },
@@ -2030,7 +2030,8 @@
         'skill': { gradient: 'bar-skill', label: '💡 Skills', color: '#00d4ff' },
         'work_experience': { gradient: 'bar-experience', label: '💼 Work Experience', color: '#8b5cf6' },
         'education': { gradient: 'bar-education', label: '🎓 Education', color: '#14b8a6' },
-        'semantic_match': { gradient: 'bar-semantic', label: '🧠 Semantic Match', color: '#f59e0b' },
+        'content_score': { gradient: 'bar-semantic', label: '📄 Content Score', color: '#f59e0b' },
+        'semantic_match': { gradient: 'bar-semantic', label: '📄 Content Score', color: '#f59e0b' },
       };
       const compList = document.getElementById('componentsList');
       compList.innerHTML = '';
@@ -2604,7 +2605,7 @@
         { key: 'skill', label: '💡 Skills', data: data.skill_evidence?.evidence || [] },
         { key: 'experience', label: '💼 Experience', data: data.experience_evidence?.evidence || [] },
         { key: 'education', label: '🎓 Education', data: data.education_evidence?.evidence || [] },
-        { key: 'semantic', label: '🧠 Semantic', data: data.semantic_evidence?.evidence || [] },
+        { key: 'content', label: '📄 Content Score', data: data.content_evidence?.evidence || data.semantic_evidence?.evidence || [] },
       ].filter(t => t.data && t.data.length > 0);
 
       tabs.forEach((tab, i) => {
