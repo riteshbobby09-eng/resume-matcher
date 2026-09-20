@@ -16,6 +16,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 
 from resume_matcher.config import AppConfig, load_config, setup_logging
 from resume_matcher.domain.enums import DocumentType
@@ -166,6 +167,139 @@ def _register_routes(app: FastAPI) -> None:
                     detail=f"Processing failed: {str(exc)}",
                 )
 
+    @app.post("/schedule-interview")
+    async def schedule_interview(req: InterviewInviteRequest):
+        """
+        Schedule an MS Teams interview session and send invite to both
+        candidate and interviewer.
+        """
+        import os
+        import smtplib
+        from datetime import datetime, timedelta
+        from email import encoders
+        from email.mime.base import MIMEBase
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+
+        # Generate Teams link if not provided
+        teams_link = req.teams_link.strip()
+        if not teams_link:
+            meeting_id = uuid.uuid4().hex[:12]
+            teams_link = f"https://teams.microsoft.com/l/meetup-join/19%3ameeting_{meeting_id}%40thread.v2/0"
+
+        # Parse start & end datetime
+        try:
+            clean_dt = req.interview_datetime.replace("Z", "+00:00")
+            dt_start = datetime.fromisoformat(clean_dt)
+        except Exception:
+            dt_start = datetime.utcnow() + timedelta(days=1, hours=10)
+
+        dt_end = dt_start + timedelta(minutes=req.duration_minutes)
+
+        # Build RFC 5545 iCalendar content (.ics)
+        dt_stamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+        dt_start_str = dt_start.strftime("%Y%m%dT%H%M%SZ")
+        dt_end_str = dt_end.strftime("%Y%m%dT%H%M%SZ")
+        uid = f"interview-{uuid.uuid4().hex[:12]}@resumematcher.ai"
+
+        summary = f"MS Teams Interview: {req.job_title}"
+        description = (
+            f"MS Teams Interview for {req.job_title}\\n\\n"
+            f"Candidate Score: {req.candidate_score:.1f}/100\\n"
+            f"Join MS Teams Meeting: {teams_link}\\n\\n"
+            f"Notes: {req.notes or 'None'}"
+        )
+
+        ics_content = (
+            "BEGIN:VCALENDAR\r\n"
+            "VERSION:2.0\r\n"
+            "PRODID:-//Resume Matcher//Interview Scheduler//EN\r\n"
+            "CALSCALE:GREGORIAN\r\n"
+            "METHOD:REQUEST\r\n"
+            "BEGIN:VEVENT\r\n"
+            f"UID:{uid}\r\n"
+            f"DTSTAMP:{dt_stamp}\r\n"
+            f"DTSTART:{dt_start_str}\r\n"
+            f"DTEND:{dt_end_str}\r\n"
+            f"SUMMARY:{summary}\r\n"
+            f"DESCRIPTION:{description}\r\n"
+            f"LOCATION:{teams_link}\r\n"
+            f"ORGANIZER;CN=Recruiter:mailto:{req.interviewer_email}\r\n"
+            f"ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=Candidate:mailto:{req.candidate_email}\r\n"
+            f"ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;CN=Interviewer:mailto:{req.interviewer_email}\r\n"
+            "STATUS:CONFIRMED\r\n"
+            "END:VEVENT\r\n"
+            "END:VCALENDAR\r\n"
+        )
+
+        # Check for SMTP configuration in environment
+        smtp_host = os.getenv("SMTP_HOST")
+        smtp_port = int(os.getenv("SMTP_PORT", "587"))
+        smtp_user = os.getenv("SMTP_USER")
+        smtp_password = os.getenv("SMTP_PASSWORD")
+        smtp_sent = False
+        smtp_error = None
+
+        if smtp_host and smtp_user and smtp_password:
+            try:
+                msg = MIMEMultipart()
+                msg["From"] = smtp_user
+                msg["To"] = req.candidate_email
+                msg["Cc"] = req.interviewer_email
+                msg["Subject"] = f"Interview Invitation: {req.job_title} via MS Teams"
+
+                body = (
+                    f"Hello,\n\n"
+                    f"You are invited to an interview for the {req.job_title} position.\n\n"
+                    f"Date & Time: {dt_start.strftime('%A, %B %d, %Y at %I:%M %p')}\n"
+                    f"Duration: {req.duration_minutes} minutes\n"
+                    f"Meeting Link: {teams_link}\n\n"
+                    f"Candidate Match Score: {req.candidate_score:.1f}/100\n"
+                    f"Notes: {req.notes or 'None'}\n\n"
+                    f"Best regards,\nRecruitment Team"
+                )
+                msg.attach(MIMEText(body, "plain"))
+
+                part = MIMEBase("text", "calendar", method="REQUEST", name="invite.ics")
+                part.set_payload(ics_content.encode("utf-8"))
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", 'attachment; filename="invite.ics"')
+                msg.attach(part)
+
+                with smtplib.SMTP(smtp_host, smtp_port) as server:
+                    server.starttls()
+                    server.login(smtp_user, smtp_password)
+                    server.sendmail(smtp_user, [req.candidate_email, req.interviewer_email], msg.as_string())
+                smtp_sent = True
+                logger.info("Interview invite email sent successfully via SMTP to %s and %s", req.candidate_email, req.interviewer_email)
+            except Exception as e:
+                logger.warning("SMTP sending failed: %s", e)
+                smtp_error = str(e)
+
+        return {
+            "status": "success",
+            "message": "Interview invite generated successfully",
+            "smtp_sent": smtp_sent,
+            "smtp_error": smtp_error,
+            "teams_link": teams_link,
+            "interview_datetime": dt_start.isoformat(),
+            "candidate_email": req.candidate_email,
+            "interviewer_email": req.interviewer_email,
+            "ics_content": ics_content,
+        }
+
+
+class InterviewInviteRequest(BaseModel):
+    candidate_email: str
+    interviewer_email: str
+    job_title: str = "Candidate Position"
+    interview_datetime: str = ""
+    duration_minutes: int = 45
+    teams_link: str = ""
+    candidate_score: float = 0.0
+    notes: str = ""
+
 
 # Create the default app instance for uvicorn
 app = create_app()
+

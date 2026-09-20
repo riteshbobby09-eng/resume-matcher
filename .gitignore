@@ -62,3 +62,4 @@ temp/
 output/
 exports/
 reports/
+.vercel

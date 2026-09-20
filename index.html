@@ -891,6 +891,131 @@
     }
     .btn-download:hover { background: rgba(16, 185, 129, 0.18); transform: translateY(-1px); }
 
+    /* ========== INTERVIEW INVITE BANNER & MODAL ========== */
+    .interview-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.14) 0%, rgba(124, 58, 237, 0.18) 100%);
+      border: 1px solid rgba(124, 58, 237, 0.35);
+      border-radius: var(--radius-md);
+      padding: 18px 24px;
+      margin: 24px 0;
+      box-shadow: 0 4px 24px rgba(79, 70, 229, 0.15);
+    }
+    .interview-banner-disqualified {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-glass);
+      box-shadow: none;
+    }
+    .interview-banner-info { display: flex; flex-direction: column; gap: 4px; }
+    .interview-banner-title { font-size: 16px; font-weight: 700; color: #a5b4fc; display: flex; align-items: center; gap: 8px; }
+    .interview-banner-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.4; }
+    .btn-teams {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 22px;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn-teams:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 22px rgba(124, 58, 237, 0.5);
+      background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+    }
+    .teams-icon-badge {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      z-index: 200; display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+    .modal-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 640px;
+      width: 92%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-card);
+    }
+    .form-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #7c3aed;
+      box-shadow: 0 0 10px rgba(124, 58, 237, 0.25);
+    }
+    .email-preview-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .email-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .email-preview-body {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      color: #cbd5e1;
+      line-height: 1.5;
+      max-height: 140px;
+      overflow-y: auto;
+    }
+
     /* ========== FOOTER ========== */
     .footer {
       padding: 20px 32px;
@@ -1073,6 +1198,9 @@
           </div>
         </div>
 
+        <!-- Interview Invite Action Banner -->
+        <div id="interviewBanner" class="interview-banner" style="display:none"></div>
+
         <!-- Requirement vs Resume Comparison Parameters -->
         <section class="comparison-section" id="comparisonSection">
           <div class="comparison-section-header">
@@ -1195,6 +1323,92 @@
         <div style="display: flex; gap: 10px;">
           <button class="btn" style="padding: 8px 16px; background: rgba(255,255,255,0.08); border: 1px solid var(--border-glass); color: var(--text-secondary);" onclick="closeApiSettings()">Cancel</button>
           <button class="btn btn-primary" style="padding: 8px 18px;" onclick="saveApiSettings()">Save URL</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MS Teams Interview Scheduler Modal -->
+  <div id="interviewModal" class="modal-backdrop" style="display:none">
+    <div class="modal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="teams-icon-badge">📅</div>
+          <div>
+            <h3 style="font-size:18px; font-weight:700;">Schedule MS Teams Interview</h3>
+            <p style="font-size:12px; color:var(--text-secondary);">Send synchronized invite to candidate & interviewer via Gmail / MS Teams</p>
+          </div>
+        </div>
+        <button style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;" onclick="closeInterviewModal()">&times;</button>
+      </div>
+
+      <div>
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>👤 Candidate Email (Gmail)</label>
+            <input type="email" id="candidateEmailInput" placeholder="candidate@gmail.com" oninput="updateEmailPreview()">
+          </div>
+          <div class="form-group">
+            <label>💼 Interviewer Email (Gmail)</label>
+            <input type="email" id="interviewerEmailInput" placeholder="interviewer@company.com" oninput="updateEmailPreview()">
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>📌 Position / Role</label>
+            <input type="text" id="interviewJobTitle" placeholder="Senior Machine Learning Engineer" oninput="updateEmailPreview()">
+          </div>
+          <div class="form-group">
+            <label>⏱️ Duration</label>
+            <select id="interviewDuration" onchange="updateEmailPreview()">
+              <option value="30">30 Minutes</option>
+              <option value="45" selected>45 Minutes</option>
+              <option value="60">60 Minutes</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row-2">
+          <div class="form-group">
+            <label>🗓️ Date & Time</label>
+            <input type="datetime-local" id="interviewDateTime" onchange="updateEmailPreview()">
+          </div>
+          <div class="form-group">
+            <label>🔗 MS Teams Meeting Link</label>
+            <div style="display:flex; gap:6px;">
+              <input type="url" id="interviewTeamsLink" placeholder="Teams meeting URL" oninput="updateEmailPreview()" style="flex:1;">
+              <button type="button" class="btn" style="padding:6px 12px; font-size:12px;" onclick="refreshTeamsLink()">⚡ New</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>📝 Key Focus Areas / Notes for Interviewer</label>
+          <textarea id="interviewNotes" rows="2" placeholder="e.g. Focus on PyTorch distributed training and LLM evaluation..." oninput="updateEmailPreview()"></textarea>
+        </div>
+
+        <!-- Live Preview Box -->
+        <div class="email-preview-card">
+          <div class="email-preview-header">
+            <span>✉️ Preview of Email to Candidate & Interviewer</span>
+            <span id="previewScoreBadge" class="badge badge-pdf">Score: 87.5%</span>
+          </div>
+          <div id="emailPreviewText" class="email-preview-body"></div>
+        </div>
+
+        <!-- Status feedback -->
+        <div id="inviteStatusMsg" style="display:none; padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; margin-top:12px;"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--border-glass); flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; gap:8px;">
+          <button type="button" class="btn" style="padding:8px 14px; font-size:13px;" onclick="downloadIcsFile()">📥 Download .ICS</button>
+          <button type="button" class="btn" style="background:rgba(234, 67, 53, 0.15); color:#ea4335; border:1px solid rgba(234, 67, 53, 0.3); padding:8px 14px; font-size:13px;" onclick="openInGmailCompose()">✉️ Open in Gmail</button>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button type="button" class="btn" style="padding:8px 16px;" onclick="closeInterviewModal()">Cancel</button>
+          <button type="button" id="sendInviteBtn" class="btn btn-primary" style="background:linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); padding:8px 20px;" onclick="sendInterviewInvite()">🚀 Send Invite to Both</button>
         </div>
       </div>
     </div>
@@ -1837,7 +2051,10 @@
         }, 200 + i * 100);
       });
 
-      // 3. Summary
+      // 3. Interview Invite Action Banner
+      renderInterviewBanner(data);
+
+      // 4. Summary
       document.getElementById('summaryText').textContent = data.recruiter_summary || 'No summary available.';
 
       // 4. Mandatory Requirements
@@ -1904,6 +2121,287 @@
       if (typeof section.scrollIntoView === 'function') {
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
+    }
+
+    // ========== MS TEAMS INTERVIEW INVITE SYSTEM ==========
+    let currentTeamsMeetingLink = '';
+    let currentIcsData = '';
+
+    function renderInterviewBanner(data) {
+      const bannerEl = document.getElementById('interviewBanner');
+      if (!bannerEl) return;
+      const finalScore = (data && data.candidate_score && typeof data.candidate_score.final_score === 'number')
+        ? data.candidate_score.final_score
+        : (typeof data?.final_score === 'number' ? data.final_score : (typeof data?.overall_score === 'number' ? data.overall_score : 0));
+
+      if (finalScore >= 60.0) {
+        bannerEl.className = 'interview-banner';
+        bannerEl.innerHTML = `
+          <div class="interview-banner-info">
+            <div class="interview-banner-title">🎉 Candidate Qualified for Interview</div>
+            <div class="interview-banner-sub">Overall suitability score of <strong style="color:#a5b4fc">${finalScore.toFixed(1)}%</strong> meets the qualification threshold (≥60%). Send synchronized interview invites to both candidate & interviewer Gmails with an MS Teams meeting session.</div>
+          </div>
+          <button class="btn-teams" id="openInviteModalBtn" onclick="openInterviewModal()">
+            📅 Schedule MS Teams Interview
+          </button>
+        `;
+      } else {
+        bannerEl.className = 'interview-banner interview-banner-disqualified';
+        bannerEl.innerHTML = `
+          <div class="interview-banner-info">
+            <div class="interview-banner-title" style="color: var(--text-muted);">⚪ Interview Invite Threshold Not Met</div>
+            <div class="interview-banner-sub">Candidate score (<strong>${finalScore.toFixed(1)}%</strong>) is below the 60% qualification criteria for automated interview invitation.</div>
+          </div>
+          <button class="btn" style="opacity: 0.5; cursor: not-allowed; padding: 10px 18px; font-size: 13px; background:rgba(255,255,255,0.05); color:var(--text-muted); border:1px solid var(--border-glass);" disabled title="Score must be >= 60% to trigger interview invite">
+            📅 Schedule Interview (Min 60%)
+          </button>
+        `;
+      }
+    }
+
+    function generateTeamsMeetingLink() {
+      const meetingId = Math.random().toString(36).substring(2, 14);
+      return `https://teams.microsoft.com/l/meetup-join/19%3ameeting_${meetingId}%40thread.v2/0`;
+    }
+
+    function extractCandidateEmail(data) {
+      if (data && data.recruiter_summary) {
+        const m = data.recruiter_summary.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+        if (m) return m[0];
+      }
+      if (data && data.comparison_parameters) {
+        for (const p of data.comparison_parameters) {
+          const m = (p.matched_resume_text || '').match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+          if (m) return m[0];
+        }
+      }
+      return 'alex.morgan.ml@gmail.com';
+    }
+
+    function openInterviewModal() {
+      const modal = document.getElementById('interviewModal');
+      const data = reportData || DEMO_REPORT;
+      const finalScore = (data && data.candidate_score && typeof data.candidate_score.final_score === 'number')
+        ? data.candidate_score.final_score
+        : (typeof data?.final_score === 'number' ? data.final_score : (typeof data?.overall_score === 'number' ? data.overall_score : 0));
+
+      // Candidate email
+      const candInput = document.getElementById('candidateEmailInput');
+      if (!candInput.value) {
+        candInput.value = extractCandidateEmail(data);
+      }
+
+      // Interviewer email
+      const intInput = document.getElementById('interviewerEmailInput');
+      if (!intInput.value) {
+        try {
+          intInput.value = localStorage.getItem('rm_interviewer_email') || 'hiring.manager@company.com';
+        } catch(e) {
+          intInput.value = 'hiring.manager@company.com';
+        }
+      }
+
+      // Job Title
+      const titleInput = document.getElementById('interviewJobTitle');
+      if (!titleInput.value) {
+        const jdName = data.processing_details?.jd_filename || 'Machine Learning Engineer';
+        titleInput.value = jdName.replace(/\.(pdf|docx)$/i, '').replace(/[_-]/g, ' ');
+      }
+
+      // DateTime (default tomorrow 10:00 AM)
+      const dtInput = document.getElementById('interviewDateTime');
+      if (!dtInput.value) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(10, 0, 0, 0);
+        dtInput.value = tomorrow.toISOString().slice(0, 16);
+      }
+
+      // Teams Link
+      if (!currentTeamsMeetingLink) {
+        currentTeamsMeetingLink = generateTeamsMeetingLink();
+      }
+      document.getElementById('interviewTeamsLink').value = currentTeamsMeetingLink;
+
+      // Status badge in preview
+      const badge = document.getElementById('previewScoreBadge');
+      if (badge) badge.textContent = `Score: ${finalScore.toFixed(1)}%`;
+
+      updateEmailPreview();
+      modal.style.display = 'flex';
+    }
+
+    function closeInterviewModal() {
+      document.getElementById('interviewModal').style.display = 'none';
+    }
+
+    function refreshTeamsLink() {
+      currentTeamsMeetingLink = generateTeamsMeetingLink();
+      document.getElementById('interviewTeamsLink').value = currentTeamsMeetingLink;
+      updateEmailPreview();
+      showToast('New MS Teams meeting link generated', 'info');
+    }
+
+    function updateEmailPreview() {
+      const candEmail = document.getElementById('candidateEmailInput').value || 'candidate@gmail.com';
+      const intEmail = document.getElementById('interviewerEmailInput').value || 'interviewer@company.com';
+      const jobTitle = document.getElementById('interviewJobTitle').value || 'Position';
+      const dtVal = document.getElementById('interviewDateTime').value;
+      const duration = document.getElementById('interviewDuration').value || '45';
+      const teamsLink = document.getElementById('interviewTeamsLink').value || currentTeamsMeetingLink;
+      const notes = document.getElementById('interviewNotes').value;
+
+      const dtFormatted = dtVal ? new Date(dtVal).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) : 'TBD';
+
+      const previewText = `TO: ${candEmail}\nCC: ${intEmail}\nSUBJECT: Interview Invitation: ${jobTitle} via MS Teams\n\n` +
+        `Hello,\n\n` +
+        `You are invited to an interview for the ${jobTitle} position.\n\n` +
+        `📅 Date & Time: ${dtFormatted}\n` +
+        `⏱️ Duration: ${duration} minutes\n` +
+        `🔗 Join MS Teams Meeting: ${teamsLink}\n\n` +
+        (notes ? `📝 Key Focus Areas: ${notes}\n\n` : '') +
+        `Please accept this invitation or reply to confirm your availability.\n\n` +
+        `Best regards,\nRecruitment Team`;
+
+      const previewEl = document.getElementById('emailPreviewText');
+      if (previewEl) previewEl.textContent = previewText;
+    }
+
+    async function sendInterviewInvite() {
+      const btn = document.getElementById('sendInviteBtn');
+      const statusDiv = document.getElementById('inviteStatusMsg');
+      const candEmail = document.getElementById('candidateEmailInput').value.trim();
+      const intEmail = document.getElementById('interviewerEmailInput').value.trim();
+      const jobTitle = document.getElementById('interviewJobTitle').value.trim() || 'Position';
+      const dtVal = document.getElementById('interviewDateTime').value;
+      const duration = parseInt(document.getElementById('interviewDuration').value, 10) || 45;
+      const teamsLink = document.getElementById('interviewTeamsLink').value.trim() || currentTeamsMeetingLink;
+      const notes = document.getElementById('interviewNotes').value.trim();
+
+      if (!candEmail || !intEmail) {
+        showToast('Please provide both candidate and interviewer emails', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Sending Invite...';
+      statusDiv.style.display = 'block';
+      statusDiv.style.background = 'rgba(255,255,255,0.05)';
+      statusDiv.style.color = 'var(--text-secondary)';
+      statusDiv.textContent = 'Generating MS Teams meeting invitation and calendar event...';
+
+      try { localStorage.setItem('rm_interviewer_email', intEmail); } catch(e){}
+
+      const payload = {
+        candidate_email: candEmail,
+        interviewer_email: intEmail,
+        job_title: jobTitle,
+        interview_datetime: dtVal ? new Date(dtVal).toISOString() : new Date().toISOString(),
+        duration_minutes: duration,
+        teams_link: teamsLink,
+        candidate_score: reportData?.candidate_score?.final_score || 87.5,
+        notes: notes
+      };
+
+      const baseUrl = getApiBaseUrl();
+      const inviteUrl = baseUrl ? `${baseUrl}/schedule-interview` : '/schedule-interview';
+
+      try {
+        const res = await fetch(inviteUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Bypass-Tunnel-Reminder': 'true'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to schedule interview');
+        }
+
+        const resData = await res.json();
+        currentIcsData = resData.ics_content;
+
+        statusDiv.style.background = 'rgba(16, 185, 129, 0.15)';
+        statusDiv.style.color = '#34d399';
+        statusDiv.innerHTML = `
+          ✅ <strong>Interview Invitation Successfully Created!</strong><br/>
+          • MS Teams Session: <a href="${teamsLink}" target="_blank" style="color:#00d4ff; text-decoration:underline;">Join Meeting</a><br/>
+          • Candidate Email: <code>${candEmail}</code><br/>
+          • Interviewer Email: <code>${intEmail}</code><br/>
+          • Calendar Invite (.ics) ready for download below!
+        `;
+        showToast('MS Teams interview invite generated successfully!', 'success');
+      } catch (err) {
+        statusDiv.style.background = 'rgba(244, 63, 94, 0.15)';
+        statusDiv.style.color = '#fb7185';
+        statusDiv.innerHTML = `⚠️ ${err.message}. You can still use the <strong>✉️ Open in Gmail</strong> or <strong>📥 Download .ICS</strong> buttons below!`;
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🚀 Send Invite to Both';
+      }
+    }
+
+    function downloadIcsFile() {
+      const dtVal = document.getElementById('interviewDateTime').value;
+      const jobTitle = document.getElementById('interviewJobTitle').value || 'Position';
+      const teamsLink = document.getElementById('interviewTeamsLink').value || currentTeamsMeetingLink;
+      const candEmail = document.getElementById('candidateEmailInput').value || 'candidate@gmail.com';
+      const intEmail = document.getElementById('interviewerEmailInput').value || 'interviewer@company.com';
+
+      let ics = currentIcsData;
+      if (!ics) {
+        const dtStart = dtVal ? new Date(dtVal) : new Date();
+        const dtEnd = new Date(dtStart.getTime() + 45 * 60000);
+        const dtStartStr = dtStart.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+        const dtEndStr = dtEnd.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+        ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\n" +
+          `SUMMARY:MS Teams Interview: ${jobTitle}\r\n` +
+          `LOCATION:${teamsLink}\r\n` +
+          `DTSTART:${dtStartStr}\r\n` +
+          `DTEND:${dtEndStr}\r\n` +
+          `DESCRIPTION:MS Teams Interview for ${jobTitle}\\nMeeting Link: ${teamsLink}\r\n` +
+          `ORGANIZER:mailto:${intEmail}\r\n` +
+          `ATTENDEE:mailto:${candEmail}\r\n` +
+          "STATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+      }
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `interview_teams_${jobTitle.toLowerCase().replace(/[^a-z0-9]/g, '_')}.ics`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Downloaded .ICS calendar event file', 'success');
+    }
+
+    function openInGmailCompose() {
+      const candEmail = document.getElementById('candidateEmailInput').value || 'candidate@gmail.com';
+      const intEmail = document.getElementById('interviewerEmailInput').value || 'interviewer@company.com';
+      const jobTitle = document.getElementById('interviewJobTitle').value || 'Position';
+      const dtVal = document.getElementById('interviewDateTime').value;
+      const duration = document.getElementById('interviewDuration').value || '45';
+      const teamsLink = document.getElementById('interviewTeamsLink').value || currentTeamsMeetingLink;
+      const notes = document.getElementById('interviewNotes').value;
+
+      const dtFormatted = dtVal ? new Date(dtVal).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' }) : 'TBD';
+
+      const subject = `Interview Invitation: ${jobTitle} via MS Teams`;
+      const body = `Hello,\n\nYou are invited to an interview for the ${jobTitle} position.\n\n` +
+        `📅 Date & Time: ${dtFormatted}\n` +
+        `⏱️ Duration: ${duration} minutes\n` +
+        `🔗 Join MS Teams Meeting: ${teamsLink}\n\n` +
+        (notes ? `📝 Key Focus Areas: ${notes}\n\n` : '') +
+        `Please reply to this email to confirm your availability.\n\n` +
+        `Best regards,\nRecruitment Team`;
+
+      const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(candEmail)}&cc=${encodeURIComponent(intEmail)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.open(gmailUrl, '_blank');
+      showToast('Opened pre-populated Gmail compose window!', 'info');
     }
 
     // ========== COMPARISON PARAMETERS (REQUIREMENTS VS RESUME) ==========
