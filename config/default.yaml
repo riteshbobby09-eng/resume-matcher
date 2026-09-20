@@ -28,10 +28,10 @@ retrieval:
 # --- Scoring Weights (must sum to 1.0) ---
 scoring:
   weights:
-    skill: 0.25
-    work_experience: 0.25
-    education: 0.25
-    content_score: 0.25
+    skill: 0.15
+    work_experience: 0.35
+    education: 0.15
+    content_score: 0.35
   thresholds:
     strong_match: 0.70
     moderate_match: 0.50

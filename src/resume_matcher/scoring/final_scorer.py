@@ -29,7 +29,7 @@ class FinalScorer:
     """
     Computes the final weighted score from component scores.
 
-    Formula: Final = Skill×0.25 + WorkExp×0.25 + Education×0.25 + Content×0.25
+    Formula: Final = Skill×0.15 + WorkExp×0.35 + Education×0.15 + Content×0.35
     """
 
     def __init__(self, weights: ScoringWeights) -> None:

@@ -48,7 +48,7 @@ class SkillScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.25,
+        weight: float = 0.15,
     ) -> ScoreComponent:
         """Calculate skill score (0–100)."""
         # Filter evidence for skill-relevant sections
@@ -122,7 +122,7 @@ class WorkExperienceScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.25,
+        weight: float = 0.35,
     ) -> ScoreComponent:
         """Calculate work experience score (0–100)."""
         relevant_jd = [
@@ -187,7 +187,7 @@ class EducationScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.25,
+        weight: float = 0.15,
     ) -> ScoreComponent:
         """Calculate education score (0–100)."""
         relevant_jd = [
@@ -251,7 +251,7 @@ class ContentScorer:
         self,
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
-        weight: float = 0.25,
+        weight: float = 0.35,
     ) -> ScoreComponent:
         """Calculate content match score (0–100)."""
         if not jd_blocks:

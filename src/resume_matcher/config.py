@@ -61,15 +61,15 @@ class RetrievalConfig:
 class ScoringWeights:
     """Scoring component weights — must sum to 1.0."""
 
-    skill: float = 0.25
-    work_experience: float = 0.25
-    education: float = 0.25
-    content_score: float = 0.25
+    skill: float = 0.15
+    work_experience: float = 0.35
+    education: float = 0.15
+    content_score: float = 0.35
     semantic_match: float | None = None
 
     def __post_init__(self) -> None:
         # Backward compatibility: if semantic_match provided, use it for content_score
-        if self.semantic_match is not None and self.content_score == 0.25 and self.semantic_match != 0.25:
+        if self.semantic_match is not None and self.content_score == 0.35 and self.semantic_match != 0.35:
             object.__setattr__(self, "content_score", self.semantic_match)
         elif self.semantic_match is None:
             object.__setattr__(self, "semantic_match", self.content_score)
