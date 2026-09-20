@@ -1304,15 +1304,15 @@
 
       <div style="margin-bottom: 12px;">
         <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 6px;">FastAPI Backend URL</label>
-        <input id="apiBaseUrlInput" type="text" placeholder="https://major-llamas-wait.loca.lt" style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px;" />
+        <input id="apiBaseUrlInput" type="text" placeholder="https://big-teams-knock.loca.lt" style="width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-glass); border-radius: var(--radius-sm); color: var(--text-primary); font-family: monospace; font-size: 13px;" />
       </div>
 
       <!-- Quick Presets -->
       <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;">
         <span style="font-size: 11px; color: var(--text-muted); align-self: center;">Quick Presets:</span>
-        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3);" onclick="document.getElementById('apiBaseUrlInput').value='https://major-llamas-wait.loca.lt'">⚡ Active Tunnel</button>
+        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(0,212,255,0.15); color: #00d4ff; border: 1px solid rgba(0,212,255,0.3);" onclick="document.getElementById('apiBaseUrlInput').value='https://big-teams-knock.loca.lt'">⚡ Active Tunnel</button>
         <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: 1px solid var(--border-glass);" onclick="document.getElementById('apiBaseUrlInput').value='http://localhost:8000'">Localhost:8000</button>
-        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: 1px solid var(--border-glass);" onclick="document.getElementById('apiBaseUrlInput').value=''">Relative (/match)</button>
+        <button type="button" class="btn" style="padding: 4px 10px; font-size: 11px; background: rgba(255,255,255,0.08); color: var(--text-secondary); border: 1px solid var(--border-glass);" onclick="document.getElementById('apiBaseUrlInput').value=''">Relative (/)</button>
       </div>
 
       <!-- Connection Status Test -->
@@ -1536,15 +1536,20 @@
 
     // ========== API CONFIGURATION ==========
     function getApiBaseUrl() {
-      try {
-        const stored = localStorage.getItem('rm_api_base_url');
-        if (stored !== null) return stored;
-      } catch (e) {}
+      // If running locally, ALWAYS use local server directly
       if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return '';
       }
+      try {
+        const stored = localStorage.getItem('rm_api_base_url');
+        if (stored && stored !== 'https://major-llamas-wait.loca.lt') {
+          return stored;
+        } else if (stored === 'https://major-llamas-wait.loca.lt') {
+          localStorage.removeItem('rm_api_base_url');
+        }
+      } catch (e) {}
       // On Vercel (HTTPS), default to the active secure HTTPS tunnel
-      return 'https://major-llamas-wait.loca.lt';
+      return 'https://big-teams-knock.loca.lt';
     }
 
     async function checkBackendHealth() {
@@ -1658,7 +1663,11 @@
       } catch (err) {
         let msg = err.message || 'Matching failed';
         if (err.name === 'TypeError' || msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-          msg = `Unable to connect to backend at ${baseUrl || 'current origin'}. Check API Config (⚙️) or click "⚡ Try Demo Report"!`;
+          if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            msg = `Unable to connect to backend. On Vercel, check the ⚙️ API Settings tunnel, or open http://localhost:8000 directly!`;
+          } else {
+            msg = `Unable to connect to backend at ${baseUrl || 'http://localhost:8000'}. Make sure FastAPI is running!`;
+          }
         }
         showToast(msg, 'error');
         document.getElementById('emptyState').style.display = 'block';
