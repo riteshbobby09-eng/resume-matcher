@@ -69,6 +69,8 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "key technologies": SectionType.SKILLS,
     "skills & abilities": SectionType.SKILLS,
     "skills and abilities": SectionType.SKILLS,
+    "skills & expertise": SectionType.SKILLS,
+    "skills and expertise": SectionType.SKILLS,
     "expertise": SectionType.SKILLS,
     "areas of knowledge": SectionType.SKILLS,
     # ──────────────── EXPERIENCE (25+ aliases) ────────────────
@@ -102,6 +104,8 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "job experience": SectionType.EXPERIENCE,
     "work details": SectionType.EXPERIENCE,
     "professional roles": SectionType.EXPERIENCE,
+    "where i have worked": SectionType.EXPERIENCE,
+    "where i worked": SectionType.EXPERIENCE,
     # ──────────────── EDUCATION (25+ aliases) ────────────────
     "education": SectionType.EDUCATION,
     "educational background": SectionType.EDUCATION,
@@ -118,6 +122,7 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "academic history": SectionType.EDUCATION,
     "scholastic record": SectionType.EDUCATION,
     "academic credentials": SectionType.EDUCATION,
+    "my academic credentials": SectionType.EDUCATION,
     "educational credentials": SectionType.EDUCATION,
     "studies": SectionType.EDUCATION,
     "academic profile": SectionType.EDUCATION,
@@ -138,6 +143,7 @@ _SECTION_ALIASES: dict[str, SectionType] = {
     "career summary": SectionType.SUMMARY,
     "profile": SectionType.SUMMARY,
     "profile summary": SectionType.SUMMARY,
+    "what i bring to the table": SectionType.SUMMARY,
     "about me": SectionType.SUMMARY,
     "personal statement": SectionType.SUMMARY,
     "overview": SectionType.SUMMARY,

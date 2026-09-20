@@ -88,7 +88,9 @@ class MatchingService:
         # 5. Component scores
         weights = self._config.scoring.weights
         skill_score = self._skill_scorer.score(evidence, jd_blocks, weights.skill)
-        exp_score = self._exp_scorer.score(evidence, jd_blocks, weights.work_experience)
+        exp_score = self._exp_scorer.score(
+            evidence, jd_blocks, weights.work_experience, resume_blocks=resume_blocks
+        )
         edu_score = self._edu_scorer.score(evidence, jd_blocks, weights.education)
         content_weight = getattr(weights, "content_score", getattr(weights, "semantic_match", 0.25))
         content_score = self._content_scorer.score(

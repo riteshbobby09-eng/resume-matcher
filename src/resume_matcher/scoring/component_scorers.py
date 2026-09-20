@@ -14,6 +14,7 @@ existing component scores (not separate components).
 from __future__ import annotations
 
 import logging
+import re
 from typing import Callable
 
 from resume_matcher.domain.enums import MatchStrength, SectionType
@@ -32,6 +33,37 @@ _SUPPORTING_SECTIONS: dict[str, list[SectionType]] = {
 def _safe_mean(values: list[float]) -> float:
     """Compute mean of values, return 0.0 if empty."""
     return sum(values) / len(values) if values else 0.0
+
+
+def _weighted_coverage(best_scores: list[float], total_count: int) -> float:
+    """Calculate weighted coverage giving graduated credit for match strength."""
+    if not total_count:
+        return 0.0
+    return sum(
+        1.0 if s >= 0.70 else (0.70 if s >= 0.50 else (0.35 if s >= 0.30 else 0.0))
+        for s in best_scores
+    ) / total_count
+
+
+def _estimate_cand_years(blocks: list[Block]) -> int:
+    """Estimate total years of candidate experience from block text."""
+    full_text = " ".join(b.text for b in blocks)
+    m = re.search(r"(\d+)\+?\s*years?\s*(?:of\s*)?experience", full_text, re.IGNORECASE)
+    if m:
+        return int(m.group(1))
+    years = [int(y) for y in re.findall(r"\b(20\d\d|19\d\d)\b", full_text)]
+    if years:
+        min_yr = min(years)
+        max_yr = 2026 if "present" in full_text.lower() or "current" in full_text.lower() else max(years)
+        return max(1, max_yr - min_yr)
+    return 1
+
+
+def _extract_req_years(jd_blocks: list[Block]) -> int:
+    """Extract required years of experience from JD text."""
+    full_text = " ".join(b.text for b in jd_blocks)
+    m = re.search(r"(\d+)\+?\s*years?", full_text, re.IGNORECASE)
+    return int(m.group(1)) if m else 0
 
 
 class SkillScorer:
@@ -83,8 +115,8 @@ class SkillScorer:
         # Quality: average of best matches
         match_quality = _safe_mean(list(best_per_jd.values())) if best_per_jd else 0.0
 
-        # Coverage: ratio of JD blocks that have any match
-        coverage = len(best_per_jd) / len(relevant_jd) if relevant_jd else 0.0
+        # Weighted coverage: strong=1.0, moderate=0.7, weak=0.35
+        coverage = _weighted_coverage(list(best_per_jd.values()), len(relevant_jd))
 
         # Combined score: 60% quality + 40% coverage, scaled to 100
         raw_score = (match_quality * 0.6 + coverage * 0.4) * 100
@@ -123,6 +155,7 @@ class WorkExperienceScorer:
         evidence: list[MatchEvidence],
         jd_blocks: list[Block],
         weight: float = 0.35,
+        resume_blocks: list[Block] | None = None,
     ) -> ScoreComponent:
         """Calculate work experience score (0–100)."""
         relevant_jd = [
@@ -153,8 +186,16 @@ class WorkExperienceScorer:
             best_per_jd[e.jd_block_id] = max(current, e.similarity_score)
 
         match_quality = _safe_mean(list(best_per_jd.values())) if best_per_jd else 0.0
-        coverage = len(best_per_jd) / len(relevant_jd) if relevant_jd else 0.0
+        coverage = _weighted_coverage(list(best_per_jd.values()), len(relevant_jd))
         raw_score = (match_quality * 0.6 + coverage * 0.4) * 100
+
+        # Seniority duration scaling factor if candidate experience is below required
+        if resume_blocks:
+            req_years = _extract_req_years(jd_blocks)
+            cand_years = _estimate_cand_years(resume_blocks)
+            if req_years > 0 and cand_years < req_years:
+                raw_score *= min(1.0, max(0.40, cand_years / req_years))
+
         raw_score = min(max(raw_score, 0.0), 100.0)
 
         missing = [
@@ -217,7 +258,7 @@ class EducationScorer:
             best_per_jd[e.jd_block_id] = max(current, e.similarity_score)
 
         match_quality = _safe_mean(list(best_per_jd.values())) if best_per_jd else 0.0
-        coverage = len(best_per_jd) / len(relevant_jd) if relevant_jd else 0.0
+        coverage = _weighted_coverage(list(best_per_jd.values()), len(relevant_jd))
         raw_score = (match_quality * 0.6 + coverage * 0.4) * 100
         raw_score = min(max(raw_score, 0.0), 100.0)
 
@@ -290,7 +331,7 @@ class ContentScorer:
             best_per_jd[e.jd_block_id] = max(current, e.similarity_score)
 
         match_quality = _safe_mean(list(best_per_jd.values())) if best_per_jd else 0.0
-        coverage = len(best_per_jd) / len(target_blocks) if target_blocks else 0.0
+        coverage = _weighted_coverage(list(best_per_jd.values()), len(target_blocks))
         raw_score = (match_quality * 0.5 + coverage * 0.5) * 100
         raw_score = min(max(raw_score, 0.0), 100.0)
 

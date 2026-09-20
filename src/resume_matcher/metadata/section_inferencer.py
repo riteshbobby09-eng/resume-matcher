@@ -207,7 +207,19 @@ class SectionInferencer:
             Same blocks list with inferred sections.
         """
         for i, block in enumerate(blocks):
-            if block.section != SectionType.UNKNOWN:
+            if block.section == SectionType.OTHER:
+                # Inspect OTHER blocks for strong structural signals
+                reclassified = False
+                for pattern, sec_type, _ in _CONTENT_SIGNALS:
+                    if sec_type in (SectionType.EXPERIENCE, SectionType.EDUCATION, SectionType.SKILLS) and pattern.search(block.text):
+                        block.section = sec_type
+                        block.metadata["reclassified_from_other"] = True
+                        reclassified = True
+                        break
+                if reclassified:
+                    continue
+
+            if block.section not in (SectionType.UNKNOWN, SectionType.OTHER):
                 # Even if section is known, check for secondary section signals (e.g. skills in experience)
                 for pattern, sec_type, _ in _CONTENT_SIGNALS:
                     if sec_type != block.section and pattern.search(block.text):

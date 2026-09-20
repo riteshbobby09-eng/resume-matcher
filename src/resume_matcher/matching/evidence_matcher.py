@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import logging
 
+import re
 import numpy as np
 
 from resume_matcher.config import RetrievalConfig, ScoringThresholds
@@ -23,6 +24,21 @@ from resume_matcher.retrieval.faiss_index import FaissIndex
 from resume_matcher.retrieval.metadata_filter import MetadataFilter
 
 logger = logging.getLogger(__name__)
+
+_STOPWORDS = {
+    "and", "or", "the", "in", "with", "for", "to", "of", "a", "an", "is", "at", "by",
+    "from", "on", "as", "experience", "years", "skills", "knowledge", "strong",
+    "proficient", "responsible", "working", "work", "role", "job", "etc", "including",
+    "using", "must", "have", "required", "requirement", "requirements", "responsibilities",
+    "about", "us", "overview", "seeking", "platform", "we", "are", "our", "you", "will",
+    "degree", "field", "related", "candidate", "ability", "abilities", "demonstrated"
+}
+
+
+def _extract_terms(text: str) -> set[str]:
+    """Extract content terms excluding stopwords for domain grounding."""
+    tokens = re.findall(r"[a-zA-Z0-9\+\#]+", text.lower())
+    return {t for t in tokens if t not in _STOPWORDS and len(t) > 1}
 
 
 class EvidenceMatcher:
@@ -43,6 +59,48 @@ class EvidenceMatcher:
         self._retrieval_config = retrieval_config
         self._thresholds = thresholds
         self._metadata_filter = MetadataFilter(retrieval_config)
+
+    def _compute_effective_match(
+        self, dense_sim: float, jd_text: str, res_text: str, jd_sec: SectionType
+    ) -> tuple[float, MatchStrength]:
+        """
+        Compute domain-grounded and calibrated similarity score.
+
+        Eliminates embedding distributional noise (baseline ~0.45-0.58) and verifies
+        lexical overlap for technical requirements.
+        """
+        jd_terms = _extract_terms(jd_text)
+        res_terms = _extract_terms(res_text)
+        overlap = jd_terms.intersection(res_terms)
+
+        # Domain grounding: if technical section and 0 lexical overlap, dense_sim < 0.70 is noise
+        if jd_sec in (SectionType.SKILLS, SectionType.REQUIREMENTS):
+            if not overlap and dense_sim < 0.70:
+                return 0.0, MatchStrength.NONE
+            raw = dense_sim
+        elif jd_sec in (SectionType.EXPERIENCE, SectionType.RESPONSIBILITIES):
+            if dense_sim < 0.52 and not overlap:
+                return 0.0, MatchStrength.NONE
+            raw = dense_sim
+        elif jd_sec == SectionType.EDUCATION:
+            if dense_sim < 0.55 and not overlap:
+                return 0.0, MatchStrength.NONE
+            raw = dense_sim
+        else:
+            if dense_sim < 0.48 and not overlap:
+                return 0.0, MatchStrength.NONE
+            raw = dense_sim
+
+        # Calibrate: 0.45 noise floor -> 0.0; 0.85 -> 1.0
+        calibrated = min(1.0, max(0.0, (raw - 0.45) / 0.40))
+        if calibrated < self._thresholds.cosine_floor:
+            return 0.0, MatchStrength.NONE
+        elif calibrated >= self._thresholds.strong_match:
+            return round(calibrated, 4), MatchStrength.STRONG
+        elif calibrated >= self._thresholds.moderate_match:
+            return round(calibrated, 4), MatchStrength.MODERATE
+        else:
+            return round(calibrated, 4), MatchStrength.WEAK
 
     def match(
         self,
@@ -128,14 +186,10 @@ class EvidenceMatcher:
             # Create evidence for each match
             for result in filtered:
                 meta = result.metadata
-                score = result.similarity_score
-
-                # ── 30% cosine floor: below threshold → 0.0 ──
-                if score < self._thresholds.cosine_floor:
-                    score = 0.0
-                    strength = MatchStrength.NONE
-                else:
-                    strength = self._classify_strength(score)
+                dense_score = result.similarity_score
+                score, strength = self._compute_effective_match(
+                    dense_score, jd_block.text, meta.get("text", ""), jd_block.section
+                )
 
                 evidence = MatchEvidence(
                     jd_block_id=jd_block.block_id,
@@ -275,9 +329,12 @@ class EvidenceMatcher:
                             best_sent_idx = int(np.argmax(sent_sims))
                             matched_text = candidates[best_sent_idx].text
                             matched_lines = candidates[best_sent_idx].source_line_numbers
-                            sent_sim = float(sent_sims[best_sent_idx])
+                            raw_sent_sim = float(sent_sims[best_sent_idx])
+                            calibrated_sent_sim, _ = self._compute_effective_match(
+                                raw_sent_sim, block.text, matched_text, block.section
+                            )
                             # Use higher of sentence or block similarity for accuracy
-                            sim = max(sim, sent_sim)
+                            sim = max(sim, calibrated_sent_sim)
                         except Exception as e:
                             logger.debug("Sentence pinpointing fallback: %s", e)
 
@@ -285,7 +342,7 @@ class EvidenceMatcher:
                 if sim >= 0.65:
                     status = "found"
                     status_desc = "Found in resume with strong evidence"
-                elif sim >= 0.48:
+                elif sim >= 0.40:
                     status = "partial"
                     status_desc = "Partially found in resume"
                 else:

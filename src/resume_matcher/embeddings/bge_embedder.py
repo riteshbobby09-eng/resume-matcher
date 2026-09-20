@@ -22,10 +22,29 @@ from resume_matcher.exceptions import EmbeddingError, ModelLoadError
 if TYPE_CHECKING:
     from sentence_transformers import SentenceTransformer
 
+import re
+
 logger = logging.getLogger(__name__)
 
 # Module-level model cache (singleton)
 _model_cache: dict[str, "SentenceTransformer"] = {}
+
+_HEADING_PREFIX_PATTERN = re.compile(
+    r"^(?:skills\s*(?:&|and)?\s*expertise|technical\s*skills|core\s*skills|key\s*skills|skills|"
+    r"work\s*experience|professional\s*experience|employment\s*history|experience|"
+    r"education|academic\s*background|educational\s*qualifications|"
+    r"professional\s*summary|executive\s*summary|summary|career\s*summary|objective|"
+    r"requirements|responsibilities|role\s*overview|about\s*us|"
+    r"where\s*i\s*have\s*worked|my\s*academic\s*credentials|what\s*i\s*bring\s*to\s*the\s*table|"
+    r"areas\s*of\s*expertise)\s*[:\-–—]?\s*",
+    re.IGNORECASE,
+)
+
+
+def _clean_for_embedding(text: str) -> str:
+    """Strip structural heading prefixes before embedding to avoid superficial formatting bias."""
+    stripped = _HEADING_PREFIX_PATTERN.sub("", text.strip())
+    return stripped if stripped else text
 
 
 class BgeEmbedder:
@@ -99,10 +118,11 @@ class BgeEmbedder:
             return np.empty((0, self._config.dimension), dtype=np.float32)
 
         model = self._get_model()
+        cleaned_texts = [_clean_for_embedding(t) for t in texts]
 
         try:
             embeddings = model.encode(
-                texts,
+                cleaned_texts,
                 batch_size=self._config.batch_size,
                 show_progress_bar=self._config.show_progress,
                 convert_to_numpy=True,

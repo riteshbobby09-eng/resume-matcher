@@ -24,8 +24,8 @@ _MANDATORY_PATTERNS = [
     re.compile(r"\b(?:non[- ]?negotiable)\b", re.IGNORECASE),
 ]
 
-# Threshold for considering a mandatory requirement "met"
-_MANDATORY_MET_THRESHOLD = 0.50
+# Threshold for considering a mandatory requirement "met" (calibrated scale)
+_MANDATORY_MET_THRESHOLD = 0.40
 
 
 class MandatoryHandler:
